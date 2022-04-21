@@ -15,16 +15,6 @@ import requests
 
 RE_HTML_ENTITY = re.compile(r'&(#?)([xX]?)(\w{1,8});', re.UNICODE)
 
-SPECIES = [
-    "ath",
-    "osa",
-    "stu",
-    "sly",
-    "nta",
-    "ptr",
-    "vvi",
-]
-
 
 # taken from gensim.utils
 def decode_htmlentities(text):
@@ -61,7 +51,7 @@ def decode_htmlentities(text):
     return RE_HTML_ENTITY.sub(substitute_entity, text)
 
 
-def expand_nodes(g, nodes):
+def expand_nodes(g, nodes, all_shown_nodes):
     if len(nodes) > 1:
         print('Error : expand not implemented for more than one node')
     node = nodes[0]
@@ -70,95 +60,28 @@ def expand_nodes(g, nodes):
     # find also neighbours on the second level to connect to the rest of the graph (if possible)
     all_neighbours = set(nodes)
     fromnodes = nodes
-    for i in range(2):
+    for i in range(1):
         neighbours = set(itertools.chain.from_iterable([g.neighbors(node) for node in fromnodes]))  # - set(fromnodes)
         if not neighbours:
             break
         all_neighbours.update(neighbours)
         fromnodes = neighbours
-    potentialEdges = g.subgraph(all_neighbours).edges(data=True)
+
+    # vsi pari med all_neighbours in all_shown_nodes
+    potentialEdges = []
+    for fr, to in [(a, b) for a in set(all_neighbours)-set(nodes) for b in set(all_shown_nodes)-set(nodes)]:
+        print('considering: ', fr, to)
+        if g.has_edge(fr, to):
+            edges = g.get_edge_data(fr, to)
+            for k in edges:
+                potentialEdges.append((fr, to, edges[k]))
+        elif g.has_edge(to, fr):
+            edges = g.get_edge_data(to, fr)
+            for k in edges:
+                potentialEdges.append((to, fr, edges[k]))
+
+    # potentialEdges = g.subgraph(all_neighbours).edges(data=True)
     return g.subgraph([node] + list(ug.neighbors(node))), potentialEdges
-
-
-
-
-# def visualize_graphviz(g, path, output='pdf'):
-#     dotfile = path + '.dot'
-#     nx.drawing.nx_pydot.write_dot(g, dotfile)
-#     subprocess.call(['dot', '-T{}'.format(output), dotfile, '-o', '{}.{}'.format(path, output)])  # , cwd=outdir)
-
-def parseJSON(url=None, path=None, headers={}):
-    '''Try url first, if failed, fall back to path'''
-
-    nodes = []
-    edges = []
-    g = nx.DiGraph()
-
-    if not (path or url):
-        raise Exception("ERROR: at least path or url")
-
-    success = False
-    if url:
-        try:
-            response = requests.get(url, headers=headers)
-            if response.ok:
-                success = True
-                for line in response.text.split("\n"):
-                    line = json.loads(line)
-                    if line['type'] == 'node':
-                        nodes.append(line)
-                    elif line['type'] == 'relationship':
-                        edges.append(line)
-                    else:
-                        raise ValueError('Unknown line')
-                    # print(line)
-        except requests.exceptions.ConnectionError as e:
-            print(f"Could not fetch file from {url}. Using a local copy.")
-            # raise e
-
-    if not success:
-        with open(path) as fp:
-            for line in fp:
-                # current_app.logger.info(line)
-                line = json.loads(line)
-                if line['type'] == 'node':
-                    nodes.append(line)
-                elif line['type'] == 'relationship':
-                    edges.append(line)
-                else:
-                    raise ValueError('Unknown line')
-                # print(line)
-
-    for node in nodes:
-        # g.add_node(node['id'], name=node['properties']['name'], labels=node['labels'])
-        node['properties']['name'] = decode_htmlentities(node['properties']['name'])
-        node['properties']['description'] = decode_htmlentities(node['properties'].get('description', ''))
-        node['properties']['evidence_sentence'] = decode_htmlentities(node['properties'].get('evidence_sentence', ''))
-        g.add_node(node['id'], labels=node['labels'], **node['properties'])
-    for edge in edges:
-        # if edge['start']['id'] not in g.nodes:
-        #     print('UNKNOWN START NODE: ', edge['start']['id'])
-        # if edge['end']['id'] not in g.nodes:
-        #     print('UNKNOWN END NODE: ', edge['end']['id'])
-        props = edge['properties'] if 'properties' in edge else {}
-        g.add_edge(edge['start']['id'], edge['end']['id'], label=edge['label'], **props)
-
-    return nodes, edges, g
-
-
-
-
-def fetch_group(labels):
-    index_labels = ['Family', 'Plant', 'Foreign', 'Node', 'FunctionalCluster']
-    for x in labels:
-        if not (x in index_labels):
-            return x
-
-    # just in case
-    return labels[0]
-
-
-################################ NEW
 
 
 def load_CKN(fname):
@@ -167,7 +90,7 @@ def load_CKN(fname):
         reader = csv.reader(csvfile, delimiter='\t')
         for i, row in enumerate(reader):
             if i > 0:
-                ckn.add_edge(row[0], row[1], type=row[2], rank=row[3], species=row[4], directed=True if row[5].upper()=='Y' else False)
+                ckn.add_edge(row[0], row[1], type=row[2], rank=row[3], species=row[4], directed=True if row[5].upper() == 'Y' else False)
     return ckn
     #
     # basename = os.path.splitext(fname)[0]
@@ -250,15 +173,16 @@ def filter_edges_for_display(g):
 
 
 def graph2json(g, query_nodes=[]):
-    groups_json = {'group0': {'shape': 'box',
+    groups_json = {'CKN node': {'shape': 'box',
                               'color': {'background': 'white'}}}
     nlist = []
     for nodeid, attrs in g.nodes(data=True):
         nodeData = {'id': nodeid,
                     'label': nodeid,
-                    'group': 'group0'}
+                    'group': 'CKN node'}
         if nodeid in query_nodes:
             nodeData['color'] = {'border': 'red',
+                                 'background': 'white',
                                  'highlight': {'border': 'red'},  # this does not work, bug in vis.js
                                  'hover': {'border': 'red'}}  # this does not work, bug in vis.js
             nodeData['borderWidth'] = 2
@@ -271,12 +195,8 @@ def graph2json(g, query_nodes=[]):
                       'label': attrs['type'],
                       'type': attrs['type'],
                       'rank': attrs['rank'],
-                      'directed': attrs['directed']
+                      'species': attrs['species'],
+                      'directed': attrs['directed'],
+                      'arrows': {'to': {'enabled': True}} if attrs['directed'] else {'to': {'enabled': False}}
                       })
     return {'network': {'nodes': nlist, 'edges': elist}, 'groups': groups_json}
-
-
-if __name__ == '__main__':
-    ns, es, g = parseJSON('data/PSS-latest.json')
-    j = graph2json(ns, es, g)
-    nd = get_autocomplete_node_data(g)

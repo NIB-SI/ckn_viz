@@ -18,8 +18,8 @@ from flask_session import Session
 sess = Session()
 
 BASEDIR = os.path.dirname(__file__)
-#CKN_PATH = os.path.join(BASEDIR, 'data/AtCKN_2022-01-26_fully-undirected.tsv')
-CKN_PATH = os.path.join(BASEDIR, 'data/sample.tsv')
+CKN_PATH = os.path.join(BASEDIR, 'data/AtCKN_2022-01-26_fully-undirected.tsv')
+# CKN_PATH = os.path.join(BASEDIR, 'data/sample.tsv')
 
 
 class CKN(object):
@@ -59,10 +59,6 @@ def create_app(test_config=None):
     def node_data():
         return ckn.node_search_data
 
-    # @app.route('/get_network', methods=['GET', 'POST'])
-    # def draw_network():
-    #     return pss.full_json
-
     @app.route('/search', methods=['GET', 'POST'])
     def search():
         try:
@@ -84,21 +80,30 @@ def create_app(test_config=None):
         try:
             data = request.get_json(force=False)
             query_nodes = set(data.get('nodes'))
+            all_nodes = set(data.get('all_nodes'))
         except Exception as e:
             return {'error': 'Invalid query data'}
 
         # potential edges are on the second level and may link to the existing graph
-        subgraph, potentialEdges = utils.expand_nodes(ckn.graph, list(query_nodes))
+        subgraph, potentialEdges = utils.expand_nodes(ckn.graph, list(query_nodes), all_nodes)
 
         # write potential edges in JSON
         elist = []
         for fr, to, attrs in potentialEdges:
             elist.append({'from': fr,
                           'to': to,
-                          'label': attrs['label'].replace('_', ' ')})
+                          'label': attrs['type'],
+                          'type': attrs['type'],
+                          'rank': attrs['rank'],
+                          'species': attrs['species'],
+                          'directed': attrs['directed']
+                          })
 
-        json_data = utils.graph2json(pss._n, pss._e, subgraph)
+        json_data = utils.graph2json(subgraph)
         json_data['network']['potential_edges'] = elist
+
+        print(len(subgraph), len(potentialEdges))
+        print(potentialEdges)
         return json_data
 
     @app.route('/')

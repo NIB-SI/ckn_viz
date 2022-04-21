@@ -19,18 +19,26 @@ $(window).resize(function() {
     scale();
 });
 
-function enableSpinner(elt) {
+function enableSpinner() {
     // disable button
-    $(elt).prop("disabled", true);
+    $('#searchButton').prop("disabled", true);
     // add spinner to button
-    $(elt).html(`<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> searching...`);
+    $('#searchButton').html(`<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> searching...`);
 }
 
-function disableSpinner(elt) {
+function disableSpinner() {
     // enable button
-    $(elt).prop("disabled", false);
+    $('#searchButton').prop("disabled", false);
     // add back text only
-    $(elt).html('search');
+    $('#searchButton').html('search');
+}
+
+function enableSuggestSpinner() {
+    $('#searchSelectWrapper').html(`<span class="spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true"></span> Loading node data...`);
+}
+
+function disableSuggestSpinner() {
+    $('#searchSelectWrapper').html(`<label for="queryInput" class="form-label">Search CKN</label>`);
 }
 
 
@@ -42,10 +50,14 @@ $( document ).ready(function() {
       type: "POST",
       contentType: 'application/json; charset=utf-8',
       processData: false,
+      beforeSend: function(jqXHR, settings) {
+          enableSuggestSpinner();
+      },
       success: function( data, textStatus, jQxhr ){
           // console.log(data.node_data);
           node_search_data = data.node_data;
           node_search_data_dict = Object.assign({}, ...node_search_data.map((x) => ({[x.id]: x})));
+          disableSuggestSpinner();
       },
       error: function( jqXhr, textStatus, errorThrown ){
           alert('Server error while loading node data.');
@@ -115,8 +127,7 @@ $( document ).ready(function() {
         if($('.node_id').toArray().length==0)
             return;
 
-        let buttonObject = this;
-        enableSpinner(buttonObject);
+        enableSpinner();
 
         $.ajax({
           url: "/search",
@@ -126,14 +137,15 @@ $( document ).ready(function() {
           processData: false,
           data: JSON.stringify({'nodes': $('.node_id').toArray().map(x => $(x).text())}),
           success: function( data, textStatus, jQxhr ){
-              disableSpinner(buttonObject);
               // console.log(data);
+              netviz.isFrozen = false;
               drawNetwork(data);
+              // disableSpinner();
               // console.log(data.network);
               // $('#response pre').html( JSON.stringify( data ) );
           },
           error: function( jqXhr, textStatus, errorThrown ){
-              disableSpinner(buttonObject);
+              disableSpinner();
               alert('Server error while loading the network.');
           }
         });
@@ -180,9 +192,9 @@ function drawNetwork(graphdata){
                     edges: {
                         arrows: 'to',
                         smooth: {
-                            enabled: false,
-                            // type: 'continuous'
-                            // type: 'dynamic',
+                            enabled: true,
+                            // type: 'continuous',
+                            type: 'dynamic',
                             forceDirection: 'none'
                         },
                         font: {
@@ -213,16 +225,30 @@ function drawNetwork(graphdata){
                         enabled: true,
                         solver: 'barnesHut',
 
+                        // barnesHut: {
+                        //     gravitationalConstant: -5000,
+                        //     centralGravity: 0.5,
+                        //     springLength: 150,
+                        //     springConstant: 0.16,
+                        //     damping: 0.5 //  netviz.nodes.length > 100 ? 0.09 : 0.25
+                        // },
                         barnesHut: {
-                            gravitationalConstant: -5000,
-                            centralGravity: 0.5,
-                            springLength: 150,
+                            gravitationalConstant: -18000,
+                            centralGravity: 0.01,
+                            springLength: 200,
                             springConstant: 0.16,
-                            damping: 0.25
+                            damping:  netviz.nodes.length > 100 ? 0.5 : 0.2,
+                        },
+                        repulsion: {
+                            centralGravity: 0,
+                            springLength: 150,
+                            springConstant: 0.05,
+                            nodeDistance: 170,
+                            damping: 0.1
                         },
                         stabilization: {
                              enabled: true,
-                             iterations: 10,
+                             iterations: netviz.nodes.length > 100 ? 50: 100,
                              fit: true
                              // updateInterval: 5,
                          },
@@ -236,14 +262,13 @@ function drawNetwork(graphdata){
     };
     postprocess_edges(data.edges);
     postprocess_nodes(data.nodes);
-    // var network = new vis.Network(container, data, options);
     netviz.network = new vis.Network(container, data, options);
     netviz.network.on('dragStart', onDragStart);
     netviz.network.on('dragEnd', onDragEnd);
 
-    // network.on("stabilized", function (params) {
-    //     network.fit({animation: {duration: 500}});
-    //    });
+    netviz.network.on("stabilizationIterationsDone", function (params) {
+        disableSpinner();
+   });
 }
 
 
@@ -261,30 +286,35 @@ function hover_node(values, id, selected, hovering) {
   // values.color = 'blue'
 }
 
+function postprocess_edge(item) {
+    let maxlen = 100;
+    let header = '<table class="table table-striped table-bordered tooltip_table">\
+                  <tbody>';
+    let footer = '</tbody>\
+                  </table>';
+    let data = [['Type', item.type],
+                ['Rank', item.rank],
+                ['Species', item.species],
+                ['Directed', item.directed ? 'yes': 'no']];
+
+    let table = '';
+    data.forEach(function (item, index) {
+        if (item[1] !=null && item[1].length>0) {
+            let row = '<tr>\
+                            <td><strong>{}</strong></td>\
+                            <td class="text-wrap">{}</td>\
+                       </tr>'.format(item[0], item[1]);
+            table += row;
+        }
+    });
+    table = header + table + footer;
+    item.title = htmlTitle(table);
+    return item;
+}
+
 function postprocess_edges(edges) {
     edges.forEach((item, i) => {
-        // if (item.type)
-        //
-        // 'PTRmod',
-        //  'actTF',
-        //  'activation',
-        //  'binding',
-        //  'catalysis',
-        //  'inhMIR',
-        //  'inhTF',
-        //  'inhibition',
-        //  'ptmod',
-        //  'unkTF'
-        //
-
-        // item.label = item.type;
-        // if(item.type == 'binding') {
-        //     item.arrows = undefined;
-        // }
-        // else {
-        //     item.arrows = 'to';
-        // }
-
+        edges[i] = postprocess_edge(item);
     });
 }
 
@@ -299,7 +329,7 @@ function postprocess_node(item) {
 
     let table = '';
     data.forEach(function (item, index) {
-        if (item[1].length>0) {
+        if (item[1] !=null && item[1].length>0) {   //if there is no group, ignore
             let row = '<tr>\
                             <td><strong>{}</strong></td>\
                             <td class="text-wrap">{}</td>\
@@ -332,11 +362,14 @@ function scale() {
 }
 
 function freezeNodes(state){
-    netviz.network.stopSimulation();
-    netviz.nodes.forEach(function(node, id){
-        netviz.nodes.update({id: id, fixed: state});
-    });
-    netviz.network.startSimulation();
+    // netviz.network.stopSimulation();
+    netviz.network.setOptions( { physics: !state } );
+    // // netviz.nodes.forEach(function(node, id){
+    // //     netviz.nodes.updateOnly({id: id, fixed: state});
+    // // });
+    // netviz.network.setOptions( { physics: state } );
+
+    // netviz.network.startSimulation();
 }
 
 function onDragStart(obj) {
@@ -359,6 +392,10 @@ function onDragEnd(obj) {
 
 function formatNodeInfoVex(nid) {
     return netviz.nodes.get(nid).title;
+}
+
+function formatEdgeInfoVex(nid) {
+    return netviz.edges.get(nid).title;
 }
 
 function edge_present(edges, newEdge) {
@@ -388,7 +425,7 @@ function expandNode(nid) {
       type: "POST",
       contentType: 'application/json; charset=utf-8',
       processData: false,
-      data: JSON.stringify({'nodes': [nid]}),
+      data: JSON.stringify({'nodes': [nid], 'all_nodes': netviz.nodes.getIds()}),
       success: function( data, textStatus, jQxhr ){
           if (data.error) {
               vex.dialog.alert('Server error when expanding the node. Please report the incident.')
@@ -455,7 +492,7 @@ function initContextMenus() {
     };
     var edgeMenu = {
         "delete": {name: "Delete"},
-        // "info": {name: "Info"}
+        "info": {name: "Info"}
     };
 
     $.contextMenu({
@@ -491,8 +528,8 @@ function initContextMenus() {
                                 netviz.nodes.remove(hoveredNode);
                             }
                             else if (key == "expand") {
-                                expandNode(hoveredNode.id);
-                                // vex.dialog.alert("Not yet implemented.");
+                                // expandNode(hoveredNode.id);
+                                vex.dialog.alert("Not yet implemented.");
                             }
                             else if (key == "fix") {
                                 netviz.nodes.update({id: hoveredNode.id, fixed: true});

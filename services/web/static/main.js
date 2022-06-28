@@ -47,7 +47,7 @@ function buildSelectWidget() {
         maxItems: null,
         closeAfterSelect: true,
         valueField: "id",
-        // labelField: "name",
+        labelField: "name",
         sortField: "id",
         searchField: ['id', 'a2_description', 'a4_short-name', 'a5_synonyms', 'a6_functional-annotation-gmm'],
         highlight: false,

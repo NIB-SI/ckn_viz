@@ -41,11 +41,44 @@ function disableSuggestSpinner() {
     $('#searchSelectWrapper').html(`<label for="queryInput" class="form-label">Search CKN</label>`);
 }
 
+function buildSelectWidget() {
+    select = $('#queryInput').selectize({
+        options: node_search_data,
+        maxItems: null,
+        closeAfterSelect: true,
+        valueField: "id",
+        // labelField: "name",
+        sortField: "id",
+        searchField: ['id', 'a2_description', 'a4_short-name', 'a5_synonyms', 'a6_functional-annotation-gmm'],
+        highlight: false,
+        render: {
+        //   item: function (item, escape) {
+        //     return "<div>" + (item.name ? '<span class="name">' + escape(item.name) + "</span>" : "") + (item.description ? '<span class="email">' + escape(item.email) + "</span>" : "") + "</div>";
+        // },
+          option: function (item, escape) {
+            let maxlen = 50;
+            let nodeID = '<span class="name"> {} </span>'.format(v.truncate(escape(item.id), maxlen));
+            let shortName = item['a4_short-name'].length>0 ? '<span class="caption"> <strong>short name:</strong> {} </span>'.format(v.truncate(escape(item['a4_short-name']), maxlen - 'short name:'.length)) : "";
+            let description = item.a2_description.length>0 ? '<span class="caption"> <strong>description:</strong> {} </span>'.format(v.truncate(escape(item.a2_description), maxlen - 'description:'.length)) : "";
+            let synonyms = item.a5_synonyms.length>0 ? '<span class="caption"> <strong>synonyms:</strong> {} </span>'.format(v.truncate(escape(item.a5_synonyms), maxlen - 'synonyms:'.length)) : "";
+            let funcAnnot = item['a6_functional-annotation-gmm'].length>0 ? '<span class="caption"> <strong>func. annot. (GMM):</strong> {} </span>'.format(v.truncate(escape(item['a6_functional-annotation-gmm']), maxlen - 'func. annot. (GMM):'.length)) : "";
+
+            return '<div>\
+            {}\
+            {}\
+            {}\
+            {}\
+            {}\
+            </div>'.format(nodeID, shortName, description, synonyms, funcAnnot);
+          },
+        }
+    });
+}
 
 $( document ).ready(function() {
     $.ajax({
       url: "/get_node_data",
-      async: false,
+      // async: false,
       dataType: 'json',
       type: "POST",
       contentType: 'application/json; charset=utf-8',
@@ -54,10 +87,10 @@ $( document ).ready(function() {
           enableSuggestSpinner();
       },
       success: function( data, textStatus, jQxhr ){
-          // console.log(data.node_data);
           node_search_data = data.node_data;
           node_search_data_dict = Object.assign({}, ...node_search_data.map((x) => ({[x.id]: x})));
           disableSuggestSpinner();
+          buildSelectWidget();
       },
       error: function( jqXhr, textStatus, errorThrown ){
           alert('Server error while loading node data.');
@@ -70,8 +103,23 @@ $( document ).ready(function() {
         // console.log(selected_values);
         selected_values.forEach(function (item, index) {
             let node = node_search_data_dict[item];
-            let nodeName = v.truncate(node.name, 25);
-            let node_id = '<small style="font-size:0px;"><strong>id: </strong><div class="node_id">{}</div></small>'.format(node.id);
+            // let nodeName = v.truncate(node.name, 25);
+            // let node_id = '<small style="font-size:0px;"><strong>id: </strong><div class="node_id">{}</div></small>'.format(node.id);
+            //
+            // let list_item = '<a href="#" class="list-group-item list-group-item-action">\
+            //     <div class="d-flex w-100 justify-content-between">\
+            //     <h5 class="mb-1">{}</h5>\
+            //     <button type="button" class="btn btn-link btn-sm float-end"><i class="bi-x-circle" style="color: red;"></i></button>\
+            //     </div>\
+            //     {}\
+            //     </a>'.format(nodeName, node_id);
+
+            let title = v.truncate(node.id, 25);
+            let node_id = '<div hidden class="node_id">{}</div>'.format(node.id);
+            let shortName = node['a4_short-name']>0 ? '<small><strong>short name: </strong>{}</small>'.format(node['a4_short-name']) : "";
+            let synonyms = node.a5_synonyms.length>0 ? '<small><strong>synonyms: </strong>{}</small>'.format(node.a5_synonyms) : "";
+            let description = node.a2_description.length>0 ? '<small><strong>description: </strong>{}</small>'.format(node.a2_description) : "";
+            let funcAnnot = node['a6_functional-annotation-gmm'].length>0 ? '<small><strong>func. annotation (GMM): </strong>{}</small>'.format(node['a6_functional-annotation-gmm']) : "";
 
             let list_item = '<a href="#" class="list-group-item list-group-item-action">\
                 <div class="d-flex w-100 justify-content-between">\
@@ -79,7 +127,12 @@ $( document ).ready(function() {
                 <button type="button" class="btn btn-link btn-sm float-end"><i class="bi-x-circle" style="color: red;"></i></button>\
                 </div>\
                 {}\
-                </a>'.format(nodeName, node_id);
+                {}\
+                {}\
+                {}\
+                {}\
+                </a>'.format(title, shortName, synonyms, description, funcAnnot, node_id);
+
 
          $('#queryList').append(list_item);
          // scroll to bottom
@@ -93,34 +146,6 @@ $( document ).ready(function() {
 
         });
     });
-
-    select = $('#queryInput').selectize({
-        options: node_search_data,
-        maxItems: null,
-        closeAfterSelect: true,
-        valueField: "id",
-        labelField: "name",
-        sortField: "name",
-        searchField: ['name'],
-        highlight: false,
-        render: {
-        //   item: function (item, escape) {
-        //     return "<div>" + (item.name ? '<span class="name">' + escape(item.name) + "</span>" : "") + (item.description ? '<span class="email">' + escape(item.email) + "</span>" : "") + "</div>";
-        // },
-          option: function (item, escape) {
-            let maxlen = 50;
-            let name = '<span class="name"> {} </span>'.format(v.truncate(escape(item.id), maxlen));
-            // let description = item.description.length>0 ? '<span class="caption"> <strong>description:</strong> {} </span>'.format(v.truncate(escape(item.description), maxlen - 'description:'.length)) : "";
-            // let synonyms = item.synonyms.length>0 ? '<span class="caption"> <strong>synonyms:</strong> {} </span>'.format(v.truncate(escape(item.synonyms), maxlen - 'synonyms:'.length)) : "";
-            // let evidence_sentence = item.evidence_sentence.length>0 ? '<span class="caption"> <strong>add. info:</strong> {} </span>'.format(v.truncate(escape(item.evidence_sentence), maxlen - 'add. info:'.length)) : "";
-
-            return '<div>\
-            {}\
-            </div>'.format(name);
-          },
-        }
-    });
-
 
 
     $('#searchButton').click(function(){
@@ -318,28 +343,33 @@ function postprocess_edges(edges) {
     });
 }
 
-function postprocess_node(item) {
+function postprocess_node(node) {
     let maxlen = 100;
     let header = '<table class="table table-striped table-bordered tooltip_table">\
                   <tbody>';
     let footer = '</tbody>\
                   </table>';
-    let data = [['Name', item.label],
-                ['Group', item.group]];
+
+    let data = [['ID', node.label],
+                ['Type', node.a1_nodeType],
+                ['Short name', node['a4_short-name']],
+                ['Description', node.a2_description],
+                ['Synonyms', node.a5_synonyms],
+                ['Func. annot. (GMM)', node['a6_functional-annotation-gmm']]];
 
     let table = '';
-    data.forEach(function (item, index) {
-        if (item[1] !=null && item[1].length>0) {   //if there is no group, ignore
+    data.forEach(function (pair, index) {
+        if (pair[1] !=null && pair[1].length>0) {
             let row = '<tr>\
                             <td><strong>{}</strong></td>\
                             <td class="text-wrap">{}</td>\
-                       </tr>'.format(item[0], item[1]);
+                       </tr>'.format(pair[0], pair[1]);
             table += row;
         }
     });
     table = header + table + footer;
-    item.title = htmlTitle(table);
-    return item;
+    node.title = htmlTitle(table);
+    return node;
 }
 
 function postprocess_nodes(nodes) {

@@ -5,6 +5,7 @@ import pickle
 import itertools
 import json
 import re
+import copy
 from html.entities import name2codepoint as n2cp
 
 import networkx as nx
@@ -84,41 +85,46 @@ def expand_nodes(g, nodes, all_shown_nodes):
     return g.subgraph([node] + list(ug.neighbors(node))), potentialEdges
 
 
-def load_CKN(fname):
+def load_edge_directions(fname):
+    directions = {}
+    with open(fname) as csvfile:
+        dialect = csv.Sniffer().sniff(csvfile.read(2048))
+        csvfile.seek(0)
+        reader = csv.DictReader(csvfile, dialect=dialect)
+        for row in reader:
+            directions[row['intType']] = True if row['isDirected'].upper() == 'Y' else False
+    return directions
+
+
+def load_CKN(fname, directions):
     ckn = nx.MultiGraph()
     with open(fname) as csvfile:
         reader = csv.reader(csvfile, delimiter='\t')
         for i, row in enumerate(reader):
             if i > 0:
-                ckn.add_edge(row[0], row[1], type=row[2], rank=row[3], species=row[4], directed=True if row[5].upper() == 'Y' else False)
+                ckn.add_edge(row[0], row[1], type=row[2], rank=row[3], species=row[4], directed=directions[row[2]])
     return ckn
-    #
-    # basename = os.path.splitext(fname)[0]
-    # pickled_fname = f'{basename}.nxgraph.pickle'
-    # if not os.path.exists(pickled_fname):
-    #     ckn = nx.MultiGraph()
-    #     with open(fname) as csvfile:
-    #         # reader = csv.reader(csvfile, delimiter='\t')
-    #         # for row in reader:
-    #         #     ckn.add_edge(row[0], row[1], type=row[2], rank=row[3], species=row[4], directed=True if row[5].upper()=='Y' else False)
-    #
-    #         dialect = csv.Sniffer().sniff(csvfile.read(2048))
-    #         csvfile.seek(0)
-    #         reader = csv.DictReader(csvfile, dialect=dialect)
-    #         for row in reader:
-    #             ckn.add_edge(row['intL'], row['intR'], type=row['intType'], rank=row['intRank'], species='ath', directed=True if row['isDirected'].upper()=='Y' else False)
-    #     with open(pickled_fname, 'wb') as fp:
-    #         pickle.dump(ckn, fp)
-    # else:
-    #     with open(pickled_fname, 'rb') as fp:
-    #         ckn = pickle.load(fp)
-    # return ckn
+
+
+def add_attributes(ckn, fname):
+    nodeAttributes = {}
+    with open(fname) as csvfile:
+        dialect = csv.Sniffer().sniff(csvfile.read(2048))
+        csvfile.seek(0)
+        reader = csv.DictReader(csvfile, dialect=dialect)
+        attNames = set(reader.fieldnames) - {'nodeID'}
+        for row in reader:
+            nodeAttributes[row['nodeID']] = {atr: row[atr] for atr in attNames}
+    nx.set_node_attributes(ckn, nodeAttributes)
 
 
 def get_autocomplete_node_data(g):
     data = []
     for nodeid, attrs in g.nodes(data=True):
-        elt = {'id': nodeid, 'name': nodeid}
+        elt = copy.copy(attrs)
+        elt['id'] = nodeid
+        elt['name'] = nodeid
+        # elt = {'id': nodeid, 'name': nodeid}
         # for atr in ['name', 'synonyms', 'description', 'evidence_sentence'] + [f'{sp}_homologues' for sp in SPECIES]:
         #     elt[atr] = attrs.get(atr, '')
         # elt['synonyms'] = ', '.join(elt['synonyms'])
@@ -177,9 +183,10 @@ def graph2json(g, query_nodes=[]):
                               'color': {'background': 'white'}}}
     nlist = []
     for nodeid, attrs in g.nodes(data=True):
-        nodeData = {'id': nodeid,
-                    'label': nodeid,
-                    'group': 'CKN node'}
+        nodeData = copy.copy(attrs)
+        nodeData['id'] = nodeid
+        nodeData['label'] = nodeid
+
         if nodeid in query_nodes:
             nodeData['color'] = {'border': 'red',
                                  'background': 'white',

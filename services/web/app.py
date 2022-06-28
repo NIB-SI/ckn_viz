@@ -18,7 +18,9 @@ from flask_session import Session
 sess = Session()
 
 BASEDIR = os.path.dirname(__file__)
-CKN_PATH = os.path.join(BASEDIR, 'data/AtCKN_2022-01-26_fully-undirected.tsv')
+CKN_PATH = os.path.join(BASEDIR, 'data/TMP_AtCKN_2022-01-26_UC.tsv')
+DIRECTIONS_PATH = os.path.join(BASEDIR, 'data/arrows-and-edges.csv')
+ANNOTATIONS_PATH = os.path.join(BASEDIR, 'data/TMP_network-anno_2022-06-16_for-AtCKN_2022-01-26.tsv')
 # CKN_PATH = os.path.join(BASEDIR, 'data/sample.tsv')
 
 
@@ -29,7 +31,9 @@ class CKN(object):
 
     def load(self, force=False, headers={}):
         if force or self.graph is None:
-            self.graph = utils.load_CKN(CKN_PATH)
+            self.edge_directions = utils.load_edge_directions(DIRECTIONS_PATH)
+            self.graph = utils.load_CKN(CKN_PATH, self.edge_directions)
+            utils.add_attributes(self.graph, ANNOTATIONS_PATH)
             self.node_search_data = utils.get_autocomplete_node_data(self.graph)
 
 

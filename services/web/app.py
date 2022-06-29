@@ -4,6 +4,7 @@ import itertools
 import networkx as nx
 
 from flask import Flask, flash, g, redirect, render_template, request, session
+from flask import Blueprint
 
 import redis
 
@@ -36,9 +37,77 @@ class CKN(object):
             utils.add_attributes(self.graph, ANNOTATIONS_PATH)
             self.node_search_data = utils.get_autocomplete_node_data(self.graph)
 
-
 ckn = CKN(force=True)
 
+
+bp = Blueprint('bp', __name__,
+               url_prefix='/ckn',
+               static_folder='static/')
+
+@bp.route('/get_node_data', methods=['GET', 'POST'])
+def node_data():
+    return ckn.node_search_data
+
+@bp.route('/search', methods=['GET', 'POST'])
+def search():
+    try:
+        data = request.get_json(force=False)
+        query_nodes = set(data.get('nodes'))
+    except Exception as e:
+        return {'error': 'Invalid query data'}
+
+    subgraph = utils.extract_shortest_paths(ckn.graph, query_nodes)
+    # # not all edges are shown, according to Ziva's table
+    # utils.filter_edges_for_display(subgraph)
+    # # WARNING: if the extracted graph containes isolates they are removed here along with newly
+    # #          introduced isolates produced by removing some edges.
+    # subgraph.remove_nodes_from(list(nx.isolates(subgraph)))
+    return utils.graph2json(subgraph, query_nodes=query_nodes)
+
+@bp.route('/expand', methods=['GET', 'POST'])
+def expand():
+    try:
+        data = request.get_json(force=False)
+        query_nodes = set(data.get('nodes'))
+        all_nodes = set(data.get('all_nodes'))
+    except Exception as e:
+        return {'error': 'Invalid query data'}
+
+    # potential edges are on the second level and may link to the existing graph
+    subgraph, potentialEdges = utils.expand_nodes(ckn.graph, list(query_nodes), all_nodes)
+
+    # write potential edges in JSON
+    elist = []
+    for fr, to, attrs in potentialEdges:
+        elist.append({'from': fr,
+                      'to': to,
+                      'label': attrs['type'],
+                      'type': attrs['type'],
+                      'rank': attrs['rank'],
+                      'species': attrs['species'],
+                      'directed': attrs['directed']
+                      })
+
+    json_data = utils.graph2json(subgraph)
+    json_data['network']['potential_edges'] = elist
+
+    print(len(subgraph), len(potentialEdges))
+    print(potentialEdges)
+    return json_data
+
+@bp.route('/')
+@cross_origin()
+def main():
+
+    if '_user_id' in session:
+        headers = {'Userid': session['_user_id']}
+    else:
+        headers = {}
+
+    # refresh pss
+    ckn.load(headers=headers)
+
+    return render_template('index.html')
 
 def create_app(test_config=None):
     # create and configure the app
@@ -59,71 +128,7 @@ def create_app(test_config=None):
         )
     sess.init_app(app)
 
-    @app.route('/get_node_data', methods=['GET', 'POST'])
-    def node_data():
-        return ckn.node_search_data
-
-    @app.route('/search', methods=['GET', 'POST'])
-    def search():
-        try:
-            data = request.get_json(force=False)
-            query_nodes = set(data.get('nodes'))
-        except Exception as e:
-            return {'error': 'Invalid query data'}
-
-        subgraph = utils.extract_shortest_paths(ckn.graph, query_nodes)
-        # # not all edges are shown, according to Ziva's table
-        # utils.filter_edges_for_display(subgraph)
-        # # WARNING: if the extracted graph containes isolates they are removed here along with newly
-        # #          introduced isolates produced by removing some edges.
-        # subgraph.remove_nodes_from(list(nx.isolates(subgraph)))
-        return utils.graph2json(subgraph, query_nodes=query_nodes)
-
-    @app.route('/expand', methods=['GET', 'POST'])
-    def expand():
-        try:
-            data = request.get_json(force=False)
-            query_nodes = set(data.get('nodes'))
-            all_nodes = set(data.get('all_nodes'))
-        except Exception as e:
-            return {'error': 'Invalid query data'}
-
-        # potential edges are on the second level and may link to the existing graph
-        subgraph, potentialEdges = utils.expand_nodes(ckn.graph, list(query_nodes), all_nodes)
-
-        # write potential edges in JSON
-        elist = []
-        for fr, to, attrs in potentialEdges:
-            elist.append({'from': fr,
-                          'to': to,
-                          'label': attrs['type'],
-                          'type': attrs['type'],
-                          'rank': attrs['rank'],
-                          'species': attrs['species'],
-                          'directed': attrs['directed']
-                          })
-
-        json_data = utils.graph2json(subgraph)
-        json_data['network']['potential_edges'] = elist
-
-        print(len(subgraph), len(potentialEdges))
-        print(potentialEdges)
-        return json_data
-
-    @app.route('/')
-    @cross_origin()
-    def main():
-
-        if '_user_id' in session:
-            headers = {'Userid': session['_user_id']}
-        else:
-            headers = {}
-
-        # refresh pss
-        ckn.load(headers=headers)
-
-        return render_template('index.html')
-
+    app.register_blueprint(bp)
     return app
 
 

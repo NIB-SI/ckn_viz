@@ -1,184 +1,49 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+{% extends 'base.html' %}
 
+{% block title %}SKM - CKN explorer{% endblock %}
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <!-- <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script> -->
+{% block page_title %}CKN explorer{% endblock %}
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.13.3/css/selectize.min.css" integrity="sha512-bkB9w//jjNUnYbUpATZQCJu2khobZXvLP5GZ8jhltg7P/dghIrTaSJ7B/zdlBUT0W/LXGZ7FfCIqNvXjWKqCYA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.13.3/js/standalone/selectize.min.js" integrity="sha512-pF+DNRwavWMukUv/LyzDyDMn8U2uvqYQdJN0Zvilr6DDo/56xPDZdDoyPDYZRSL4aOKO/FGKXTpzDyQJ8je8Qw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+{% block description %}
+  <p> Use the search-box to find nodes in CKN and add them to the query box. </p>
+{% endblock %}
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+{% block search_interface %}
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/voca/1.4.0/voca.min.js" integrity="sha512-yrLbujQF3UPLrlaavtewYmv7OFD8AGO5PS8jg0VKlXP8kW9POHaG/bbpwSbpkqe4SCXVwTtYAMsKdOukT11bxQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/string-format/0.5.0/string-format.min.js" integrity="sha512-umUQjNj1rAebq5zbgyU2sFNEREC48ohuUAdAwTa1qbEibzzbTnJLhj8ASNNsoKkWQ3ef+QjtZvGgVWJulLetxQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <div class="col-6 mb-3">
+      <div class="vstack gap-3">
+        <input class="form-check-input" type="checkbox" id="showTooltipsCbox" value="" aria-label="...">
+        <label class="mx-2" for="form-check-input">show tooltips</label>
+      </div>
+    </div>
 
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/vex-js/4.1.0/css/vex.min.css" rel="stylesheet" type="text/css" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/vex-js/4.1.0/css/vex-theme-default.min.css" rel="stylesheet" type="text/css" />
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vex-js/4.1.0/js/vex.combined.min.js"></script>
-    <script>vex.defaultOptions.className = 'vex-theme-default'</script>
-
-    <!-- context menus -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.9.2/jquery.contextMenu.min.js" integrity="sha512-kvg/Lknti7OoAw0GqMBP8B+7cGHvp4M9O9V6nAYG91FZVDMW3Xkkq5qrdMhrXiawahqU7IZ5CNsY/wWy1PpGTQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.9.2/jquery.contextMenu.css" integrity="sha512-EF5k2tHv4ShZB7zESroCVlbLaZq2n8t1i8mr32tgX0cyoHc3GfxuP7IoT8w/pD+vyoq7ye//qkFEqQao7Ofrag==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-
-
-    <script src="{{ url_for('static', filename='main.js') }}"></script>
-    <link href="{{ url_for('static', filename='main.css') }}" rel="stylesheet" />
-
-    <link rel="shortcut icon" href="/biomine/static/favicon.ico">
-
-    <title>SKM - CKN explorer</title>
-  </head>
-  <body>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/verge@1.10.2/verge.min.js"></script>
-
-
-    <div class="container-fluid">
-        <div class="row sticky-top">
-          <ul class="nav navbar-nav" style="background: #00672c; color:floralwhite; width: 100%;">
-            <a class="nav-link" href="/" style="color:floralwhite;  margin-left: 10px;"> &larr; Home</a>
-          </ul>
+    <div class="mb-3">
+      <div id="searchSelectWrapper">
+          <label for="queryInput" class="form-label">Search CKN</label>
+      </div>
+      <div id="myModal">
+          <select id="queryInput" class="select_items"></select>
+      </div>
+      <div class="row">
+        <div class="col-md-8 offset-md-4 me-0">
+          <button type="button" class="btn btn-outline-primary float-end" id="add2selected">add to query</button>
         </div>
-
-        <div class="row">
-          <div class="col-xs-6 col-sm-5 col-md-5 col-lg-4 col-xl-3 col-xxl-3 border-end border-light border-2" id="configColumn">
-            <div class="card m-1">
-              <div class="card-body">
-              <h1 class="card-title"> CKN explorer </h1>
-              <p  class="card-text"> Use the search-box to find
-             nodes in CKN and add them to the query box.
-              </p>
-              <!-- <button type="button"  class="btn btn-outline-info" data-toggle="popover"
-                 data-bs-content='
-                 <div style="width:100%;">
-                 <p> Reactions (and interactions) in PSS are represented as nodes, the participants and the reaction itself, and edges (or arcs) connecting participants to the reaction in an informational way. <p>
-
-                 <p> For example, the following reaction  (A + B &rarr; C, catalysed by e):
-                    <div style="width:400; height:135">
-                      <img  width=400px; height=135px"  src="/static/images/reaction_types/basic-reaction-biology.png"/>
-                    </div>
-                  Is represented in PSS as:
-                    <div style="width:400px; height:200px;">
-                      <img width=400 height=200 src="/static/images/reaction_types/basic-reaction.png"/>
-                    </div>
-                  </p>
-
-                 <p>For more information, see <a href="/documentation/pss-db#_9jzo3jll39m3" target="_blank">SKM Documentation &#167; Reactions</a>. </p>
-
-                 <p> Note that the shortest path does not take into account the direction of the edges and does not extract the complete reactions.
-                </div>'
-                 data-bs-html=true
-                 title="Help" >
-                 Interpreting the result
-              </button> -->
-
-              </div>
-            </div>
-
-              <form id="searchform">
-                <div class="mb-3">
-                    <div id="searchSelectWrapper">
-                        <label for="queryInput" class="form-label">Search CKN</label>
-                    </div>
-
-                    <div id="myModal">
-                        <select id="queryInput" class="select_items">
-                        </select>
-                    </div>
-                </div>
-
-                <div class="container mb-3 me-0 pe-0 ps-0">
-
-                    <div class="row justify-content-between">
-                      <div class="col-8">
-
-                          <div class="vstack gap-3">
-                            <div>
-                                <input class="form-check-input" type="checkbox" id="showTooltipsCbox" value="" aria-label="...">
-                                <label for="form-check-input">show tooltips</label>
-                            </div>
-                            <!-- <div>
-                                <input class="form-check-input" type="checkbox" id="showEdgeLabelsCbox" value="" aria-label="...">
-                                <label for="form-check-input">show edge labels</label>
-                            </div> -->
-                          </div>
-
-                        <!-- <input class="form-check-input" type="checkbox" id="showTooltipsCbox" value="" aria-label="...">
-                        <label for="form-check-input">show tooltips</label>
-                        <input class="form-check-input" type="checkbox" id="showEdgeLabelsCbox" value="" aria-label="...">
-                        <label for="form-check-input">show edge labels</label> -->
-                      </div>
-                      <div class="col-4">
-                        <button type="button" class="btn btn-outline-primary float-end" id="add2selected">add to query</button>
-                      </div>
-                    </div>
-
-                  <!-- <div class="row">
-                    <div class="col-md-6  me-0">
-                        <button type="button" class="btn btn-outline-primary float-end" id="add2selected">add to query</button>
-                    </div>
-                  </div> -->
-
-                </div>
-
-                <!-- <div class="mb-3">
-                    <label for="nodeList" class="form-label">Your query</label>
-                    <div class="input-group">
-                      <span class="input-group-text">Selected nodes</span>
-                      <textarea class="form-control" aria-label="Selected nodes" id="nodeList"></textarea>
-                    </div>
-                </div> -->
-
-                <label for="queryList" class="form-label">Your query</label>
-                  <div class="list-group" id="queryList">
-                  </div>
-
-
-                  <div class="container mb-3 me-0 pe-0">
-                    <div class="row">
-                      <div class="col-md-6 offset-md-6 me-0">
-                          <button type="button" class="btn btn-primary float-end" id="searchButton">search</button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- <div class="container mb-3 me-0 pe-0">
-                    <div class="row">
-                      <div class="col-md-6 offset-md-6 me-0">
-                          <button type="button" class="btn btn-primary float-end" id="draw_complete_network_button">draw full</button>
-                      </div>
-                    </div>
-                  </div> -->
-
-              </form>
-
-          </div>
-
-          <div class="col-xs-6 col-sm-7 col-md-7 col-lg-8 col-xl-9 col-xxl-9" id="networkViewContainer">
-              <div id="networkView"></div>
-          </div>
-
-        </div>
+      </div>
     </div>
 
 
-  </body>
+    <label for="queryList" class="form-label">Your query</label>
+      <div class="list-group" id="queryList">
+      </div>
 
 
-  <script type="text/javascript">
-    // enable all popover in the document:
-    $(document).ready(function () {
-        $('[data-toggle="popover"]').popover({
-          container: 'body'
-        })
-    });
-  </script>
-</html>
+      <div class="container mb-3 me-0 pe-0">
+        <div class="row">
+          <div class="col-md-6 offset-md-6 me-0">
+              <button type="button" class="btn btn-primary float-end" id="searchButton">search</button>
+          </div>
+        </div>
+      </div>
+
+
+{% endblock %}

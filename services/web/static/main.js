@@ -77,7 +77,7 @@ function buildSelectWidget() {
 
 $( document ).ready(function() {
     $.ajax({
-      url: "/get_node_data",
+      url: "/ckn/get_node_data",
       // async: false,
       dataType: 'json',
       type: "POST",
@@ -155,7 +155,7 @@ $( document ).ready(function() {
         enableSpinner();
 
         $.ajax({
-          url: "/search",
+          url: "/ckn/search",
           dataType: 'json',
           type: "POST",
           contentType: 'application/json; charset=utf-8',
@@ -449,7 +449,7 @@ function edge_present(edges, newEdge) {
 
 function expandNode(nid) {
     $.ajax({
-      url: "/expand",
+      url: "/ckn/expand",
       async: false,
       dataType: 'json',
       type: "POST",

@@ -51,11 +51,18 @@
         </div>
 
         <div class="row" style="height:calc(100vh - 60px);"> <!-- h-100"> -->
-          <div class="col-xs-6 col-sm-5 col-md-5 col-lg-4 col-xl-3 col-xxl-3 border-end border-light border-2" id="configColumn">
-            <form class="px-3 h-100" id="searchform">
+          <div class="px-1 col-xs-6 col-sm-5 col-md-5 col-lg-4 col-xl-3 col-xxl-3 border-end border-light border-2" id="configColumn">
+            <form class="h-100" id="searchform">
               <div class="pt-3">
                   <h1 class="card-title"> {% block page_title %}{% endblock %} </h1>
                   <div  class="card-text"> {% block description %}{% endblock %} </div>
+              </div>
+
+              <div class="mb-3">
+                <div class="vstack gap-3">
+                  <input class="form-check-input" type="checkbox" id="showTooltipsCbox" value="" aria-label="...">
+                  <label class="mx-2" for="form-check-input">show tooltips</label>
+                </div>
               </div>
 
               {% block search_interface %}{% endblock %}
@@ -66,8 +73,13 @@
               <div id="networkView"></div>
           </div>
         </div>
+
+      <div id="footer" class=""></div>
     </div>
+
   </body>
+
+
 
   <script type="text/javascript">
     // enable all popover in the document:

@@ -5,45 +5,32 @@
 {% block page_title %}CKN explorer{% endblock %}
 
 {% block description %}
-  <p> Use the search-box to find nodes in CKN and add them to the query box. </p>
+  <p> Use the searchbox to find nodes in CKN and add them to the query box. </p>
 {% endblock %}
 
 {% block search_interface %}
-
-    <div class="col-6 mb-3">
-      <div class="vstack gap-3">
-        <input class="form-check-input" type="checkbox" id="showTooltipsCbox" value="" aria-label="...">
-        <label class="mx-2" for="form-check-input">show tooltips</label>
-      </div>
+  <div class="mb-3">
+    <div id="searchSelectWrapper">
+        <label for="queryInput" class="form-label">Search CKN</label>
+        <div id="myModal">
+            <select id="queryInput" class="select_items"></select>
+        </div>
     </div>
 
-    <div class="mb-3">
-      <div id="searchSelectWrapper">
-          <label for="queryInput" class="form-label">Search CKN</label>
-      </div>
-      <div id="myModal">
-          <select id="queryInput" class="select_items"></select>
-      </div>
-      <div class="row">
-        <div class="col-md-8 offset-md-4 me-0">
-          <button type="button" class="btn btn-outline-primary float-end" id="add2selected">add to query</button>
-        </div>
+    <div class="row">
+      <div class="col-md-8 offset-md-4 me-0">
+        <button type="button" class="btn btn-outline-primary float-end" id="add2selected">add to query</button>
       </div>
     </div>
+  </div>
 
-
-    <label for="queryList" class="form-label">Your query</label>
-      <div class="list-group" id="queryList">
+  <label for="queryList" class="form-label">Your query</label>
+  <div id="queryList_contaner">
+    <div class="list-group" id="queryList"></div>
+</div>
+    <div class="container mb-3 me-0 pe-0">
+      <div class="row me-0">
+          <button type="button" class="btn btn-primary" id="searchButton">search</button>
       </div>
-
-
-      <div class="container mb-3 me-0 pe-0">
-        <div class="row">
-          <div class="col-md-6 offset-md-6 me-0">
-              <button type="button" class="btn btn-primary float-end" id="searchButton">search</button>
-          </div>
-        </div>
-      </div>
-
-
+    </div>
 {% endblock %}

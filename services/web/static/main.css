@@ -1,6 +1,7 @@
 
-#nodeList {
-    height: 300px;
+#queryList {
+    min-height: 300px;
+    height: calc(100vh - 700px);
 }
 
 #searchform {
@@ -8,7 +9,6 @@
 }
 
 .list-group{
-    height: 300px;
     padding: 3px;
     /* min-height: 300px;
     max-height: 400px; */
@@ -28,7 +28,7 @@
    font-weight: normal;
 }
 
- .selectize-dropdown-content > div {
+.selectize-dropdown-content > div {
      margin-bottom: 10px;
 }
 
@@ -84,4 +84,15 @@
     /* line-height: 1.5em !important; */
     font-family: var(--bs-font-sans-serif) !important;
 
+}
+
+/* page footer --------------------------------- */
+#footer {
+  background: #00672c;
+  height: 20px;
+  position: fixed;
+  bottom: 0px;
+  left: 0;
+  width: 100%;
+  z-index: 99;
 }

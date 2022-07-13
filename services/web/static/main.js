@@ -38,8 +38,11 @@ function enableSuggestSpinner() {
 }
 
 function disableSuggestSpinner() {
-    $('#searchSelectWrapper').html(`<label for="queryInput" class="form-label">Search CKN</label>`);
+    $('#searchSelectWrapper').html(`<label for="queryInput" class="form-label">Search CKN</label>    <div id="myModal">
+            <select id="queryInput" class="select_items"></select>
+        </div>`);
 }
+
 
 function buildSelectWidget() {
     select = $('#queryInput').selectize({
@@ -388,7 +391,7 @@ function htmlTitle(html) {
 }
 
 function scale() {
-    $('#networkView').height(verge.viewportH()-40);
+    $('#networkView').height(verge.viewportH()-60);
     $('#networkView').width($('#networkViewContainer').width());
 }
 

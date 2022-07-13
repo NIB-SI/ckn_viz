@@ -185,7 +185,11 @@ def graph2json(g, query_nodes=[]):
     for nodeid, attrs in g.nodes(data=True):
         nodeData = copy.copy(attrs)
         nodeData['id'] = nodeid
-        nodeData['label'] = nodeid
+
+        if attrs['a4_short-name'] != '-':
+            nodeData['label'] = attrs['a4_short-name']
+        else:
+            nodeData['label'] = nodeid
 
         if nodeid in query_nodes:
             nodeData['color'] = {'border': 'red',

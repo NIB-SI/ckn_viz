@@ -57,8 +57,8 @@ function buildSelectWidget() {
         // },
           option: function (item, escape) {
             let maxlen = 50;
-            let nodeID = '<span class="name"> {} </span>'.format(v.truncate(escape(item.id), maxlen));
-            let shortName = item['a4_short-name'].length>0 ? '<span class="caption"> <strong>short name:</strong> {} </span>'.format(v.truncate(escape(item['a4_short-name']), maxlen - 'short name:'.length)) : "";
+            let shortName = item['a4_short-name'].length>0 ? '<span class="name"> {} </span>'.format(v.truncate(escape(item['a4_short-name']), maxlen - 'short name:'.length)) : "";
+            let nodeID = '<span class="caption"> <strong>identifier:</strong> {} </span>'.format(v.truncate(escape(item.id), maxlen));
             let description = item.a2_description.length>0 ? '<span class="caption"> <strong>description:</strong> {} </span>'.format(v.truncate(escape(item.a2_description), maxlen - 'description:'.length)) : "";
             let synonyms = item.a5_synonyms.length>0 ? '<span class="caption"> <strong>synonyms:</strong> {} </span>'.format(v.truncate(escape(item.a5_synonyms), maxlen - 'synonyms:'.length)) : "";
             let funcAnnot = item['a6_functional-annotation-gmm'].length>0 ? '<span class="caption"> <strong>func. annot. (GMM):</strong> {} </span>'.format(v.truncate(escape(item['a6_functional-annotation-gmm']), maxlen - 'func. annot. (GMM):'.length)) : "";
@@ -69,7 +69,7 @@ function buildSelectWidget() {
             {}\
             {}\
             {}\
-            </div>'.format(nodeID, shortName, description, synonyms, funcAnnot);
+            </div>'.format(shortName, nodeID, description, synonyms, funcAnnot);
           },
         }
     });
@@ -114,7 +114,8 @@ $( document ).ready(function() {
             //     {}\
             //     </a>'.format(nodeName, node_id);
 
-            let title = v.truncate(node.id, 25);
+            let title = node['a4_short-name']!= '-' ? node['a4_short-name'] : v.truncate(node.id, 25);
+            let identifier = '<small><strong>identifier: </strong>{}</small>'.format(node.id, 25);
             let node_id = '<div hidden class="node_id">{}</div>'.format(node.id);
             let shortName = node['a4_short-name']>0 ? '<small><strong>short name: </strong>{}</small>'.format(node['a4_short-name']) : "";
             let synonyms = node.a5_synonyms.length>0 ? '<small><strong>synonyms: </strong>{}</small>'.format(node.a5_synonyms) : "";
@@ -131,7 +132,7 @@ $( document ).ready(function() {
                 {}\
                 {}\
                 {}\
-                </a>'.format(title, shortName, synonyms, description, funcAnnot, node_id);
+                </a>'.format(title, identifier, synonyms, description, funcAnnot, node_id);
 
 
          $('#queryList').append(list_item);

@@ -191,6 +191,18 @@ $( document ).ready(function() {
 
     scale();
     initContextMenus();
+
+
+    $('#saveAsDropdown a').click(function(){
+        if ($(this).attr('href') == '#nodes') {
+            export_nodes();
+        }
+        else if ($(this).attr('href') == '#edges') {
+            export_edges();
+        }
+    });
+
+
 });
 
 
@@ -616,4 +628,79 @@ function initContextMenus() {
             }
         });
 
+}
+
+
+function format_cell(s){
+    s = s.toString();
+    s = s.trim();
+    s = s.replace('\n', '');
+    if (s[0]!='"' && s.slice(-1)!='"' && s.search(',')!=-1){
+        s = '"' + s + '"';
+    }
+    return s;
+}
+
+
+function export_nodes() {
+    if(netviz.nodes==undefined) {
+        vex.dialog.alert('No nodes to export! You need to do a search first.');
+        return;
+    }
+
+    var data = [['id', 'type', 'short name', 'description', 'synonyms', 'functional annotation (GoMapMan)']];
+    netviz.nodes.forEach(function(node, id){
+        var line = new Array;
+
+        ['id', 'a1_nodeType', 'a4_short-name', 'a2_description', 'a5_synonyms', 'a6_functional-annotation-gmm'].forEach(function(aname){
+            let atr = node[aname];
+            if (atr != undefined)
+                line.push(format_cell(atr));
+            else
+                line.push('');
+        })
+        data.push(line);
+    })
+
+    var datalines = new Array;
+    data.forEach(function(line_elements){
+        datalines.push(line_elements.join(','));
+    })
+    var csv = datalines.join('\n')
+
+    var blob = new Blob([csv], {type: "text/csv;charset=utf-8"});
+    saveAs(blob, "nodes.csv");
+}
+
+
+
+function export_edges(){
+    if(netviz.edges==undefined) {
+        vex.dialog.alert('No edges to export! You need to do a search first.');
+        return;
+    }
+
+    var data = [['from','to','directed','rank','type','species']];
+    netviz.edges.forEach(function(edge, id){
+        var line = new Array;
+
+        ['from', 'to', 'directed', 'rank', 'type', 'species'].forEach(function(aname){
+            let atr = edge[aname];
+            if (atr != undefined)
+                line.push(format_cell(atr));
+            else
+                line.push('');
+        })
+
+        data.push(line);
+    })
+
+    var datalines = new Array;
+    data.forEach(function(line_elements){
+        datalines.push(line_elements.join(','));
+    })
+    var csv = datalines.join('\n');
+
+    var blob = new Blob([csv], {type: "text/csv;charset=utf-8"});
+    saveAs(blob, "edges.csv");
 }

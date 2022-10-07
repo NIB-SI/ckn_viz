@@ -18,6 +18,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/voca/1.4.0/voca.min.js" integrity="sha512-yrLbujQF3UPLrlaavtewYmv7OFD8AGO5PS8jg0VKlXP8kW9POHaG/bbpwSbpkqe4SCXVwTtYAMsKdOukT11bxQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/string-format/0.5.0/string-format.min.js" integrity="sha512-umUQjNj1rAebq5zbgyU2sFNEREC48ohuUAdAwTa1qbEibzzbTnJLhj8ASNNsoKkWQ3ef+QjtZvGgVWJulLetxQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.4/dist/FileSaver.min.js"></script>
+
+
     <link href="https://cdnjs.cloudflare.com/ajax/libs/vex-js/4.1.0/css/vex.min.css" rel="stylesheet" type="text/css" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/vex-js/4.1.0/css/vex-theme-default.min.css" rel="stylesheet" type="text/css" />
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vex-js/4.1.0/js/vex.combined.min.js"></script>
@@ -105,58 +109,48 @@
                                 <input class="form-check-input" type="checkbox" id="showTooltipsCbox" value="" aria-label="...">
                                 <label for="form-check-input">show tooltips</label>
                             </div>
-                            <!-- <div>
-                                <input class="form-check-input" type="checkbox" id="showEdgeLabelsCbox" value="" aria-label="...">
-                                <label for="form-check-input">show edge labels</label>
-                            </div> -->
                           </div>
 
-                        <!-- <input class="form-check-input" type="checkbox" id="showTooltipsCbox" value="" aria-label="...">
-                        <label for="form-check-input">show tooltips</label>
-                        <input class="form-check-input" type="checkbox" id="showEdgeLabelsCbox" value="" aria-label="...">
-                        <label for="form-check-input">show edge labels</label> -->
                       </div>
                       <div class="col-4">
                         <button type="button" class="btn btn-outline-primary float-end" id="add2selected">add to query</button>
                       </div>
                     </div>
 
-                  <!-- <div class="row">
-                    <div class="col-md-6  me-0">
-                        <button type="button" class="btn btn-outline-primary float-end" id="add2selected">add to query</button>
-                    </div>
-                  </div> -->
-
                 </div>
 
-                <!-- <div class="mb-3">
-                    <label for="nodeList" class="form-label">Your query</label>
-                    <div class="input-group">
-                      <span class="input-group-text">Selected nodes</span>
-                      <textarea class="form-control" aria-label="Selected nodes" id="nodeList"></textarea>
-                    </div>
-                </div> -->
 
                 <label for="queryList" class="form-label">Your query</label>
                   <div class="list-group" id="queryList">
-                  </div>
+                </div>
 
 
-                  <div class="container mb-3 me-0 pe-0">
-                    <div class="row">
-                      <div class="col-md-6 offset-md-6 me-0">
+                <div class="container mb-3 me-0 pe-0 ps-0">
+
+                    <div class="row justify-content-between">
+                      <div class="col-6">
+
+
+                        <div class="dropdown float-start">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="saveAsButton" data-bs-toggle="dropdown" aria-expanded="false">
+                            export
+                        </button>
+                        <ul class="dropdown-menu" id="saveAsDropdown" aria-labelledby="saveAsButton">
+                             <a class="dropdown-item" href="#nodes">nodes (.csv format)</a>
+                             <a class="dropdown-item" href="#edges">edges (.csv format)</a>
+                        </ul>
+                        </div>
+
+                      </div>
+
+                      <div class="col-6">
                           <button type="button" class="btn btn-primary float-end" id="searchButton">search</button>
                       </div>
-                    </div>
-                  </div>
 
-                  <!-- <div class="container mb-3 me-0 pe-0">
-                    <div class="row">
-                      <div class="col-md-6 offset-md-6 me-0">
-                          <button type="button" class="btn btn-primary float-end" id="draw_complete_network_button">draw full</button>
-                      </div>
+
                     </div>
-                  </div> -->
+
+                </div>
 
               </form>
 

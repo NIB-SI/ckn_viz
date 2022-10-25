@@ -29,8 +29,22 @@
     <div class="list-group" id="queryList"></div>
 </div>
     <div class="container mb-3 me-0 pe-0">
-      <div class="row me-0">
+      <div class="row me-0 justify-content-between">
+
+        <div class="col-6">
+          <div class="dropdown float-start">
+            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="saveAsButton" data-bs-toggle="dropdown" aria-expanded="false">export</button>
+            <ul class="dropdown-menu" id="saveAsDropdown" aria-labelledby="saveAsButton">
+               <a class="dropdown-item" href="#nodes">nodes (.csv format)</a>
+               <a class="dropdown-item" href="#edges">edges (.csv format)</a>
+            </ul>
+          </div>
+        </div>
+
+        <div class="col-6">
           <button type="button" class="btn btn-primary" id="searchButton">search</button>
+        </div>
+
       </div>
     </div>
 {% endblock %}

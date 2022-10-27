@@ -1,3 +1,6 @@
+// prevents dialog closing immediately when page navigates
+vex.defaultOptions.closeAllOnPopState = false;
+
 var netviz = {
     nodes: undefined,
     edges: undefined,

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}SKM - CKN explorer{% endblock %}
+{% block title %}CKN explorer{% endblock %}
 
 {% block page_title %}CKN explorer{% endblock %}
 
@@ -9,6 +9,15 @@
 {% endblock %}
 
 {% block search_interface %}
+
+  <div class="mb-3">
+    <div class="vstack gap-3">
+      <input class="form-check-input" type="checkbox" id="limit_ranks" value="" aria-label="...">
+      <label class="mx-2" for="form-check-ranks">limit to rank 0, 1, and 2 edges</label>
+    </div>
+  </div>
+
+
   <div class="mb-3">
     <div id="searchSelectWrapper">
         <label for="queryInput" class="form-label">Search CKN</label>
@@ -38,6 +47,7 @@
           <ul class="dropdown-menu" id="saveAsDropdown" aria-labelledby="saveAsButton">
              <a class="dropdown-item" href="#nodes">nodes (.csv format)</a>
              <a class="dropdown-item" href="#edges">edges (.csv format)</a>
+             <a class="dropdown-item" href="#png">image (.png format)</a>
           </ul>
         </div>
       </div>
@@ -50,4 +60,12 @@
 
     </div>
   </div>
+
+
+<div id="spinner" class="card-body text-center">
+  <span class="spinner-border spinner-border-md" role="status" aria-hidden="true"></span>
+  <span> Searching... </span>
+</div>
+
+
 {% endblock %}

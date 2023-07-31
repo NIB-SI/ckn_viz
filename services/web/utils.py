@@ -56,53 +56,48 @@ def expand_nodes(g, nodes, all_shown_nodes):
     if len(nodes) > 1:
         print('Error : expand not implemented for more than one node')
     node = nodes[0]
-    ug = nx.Graph(g.copy())
+    # ug = nx.Graph(g)
 
     # find also neighbours on the second level to connect to the rest of the graph (if possible)
     all_neighbours = set(nodes)
     fromnodes = nodes
     for i in range(1):
-        neighbours = set(itertools.chain.from_iterable([g.neighbors(node) for node in fromnodes]))  # - set(fromnodes)
+        neighbours = set(itertools.chain.from_iterable([g.to_undirected().neighbors(node) for node in fromnodes]))  # - set(fromnodes)
         if not neighbours:
             break
         all_neighbours.update(neighbours)
         fromnodes = neighbours
 
-    # vsi pari med all_neighbours in all_shown_nodes
-    potentialEdges = []
-    for fr, to in [(a, b) for a in set(all_neighbours)-set(nodes) for b in set(all_shown_nodes)-set(nodes)]:
-        print('considering: ', fr, to)
-        if g.has_edge(fr, to):
-            edges = g.get_edge_data(fr, to)
-            for k in edges:
-                potentialEdges.append((fr, to, edges[k]))
-        elif g.has_edge(to, fr):
-            edges = g.get_edge_data(to, fr)
-            for k in edges:
-                potentialEdges.append((to, fr, edges[k]))
+    # # vsi pari med all_neighbours in all_shown_nodes
+    # potentialEdges = []
+    # for fr, to in [(a, b) for a in set(all_neighbours)-set(nodes) for b in set(all_shown_nodes)-set(nodes)]:
+    #     print('considering: ', fr, to)
+    #     if g.has_edge(fr, to):
+    #         edges = g.get_edge_data(fr, to)
+    #         for k in edges:
+    #             print(fr, to, k, edges[k])
+    #             potentialEdges.append((fr, to, edges[k]))
 
-    # potentialEdges = g.subgraph(all_neighbours).edges(data=True)
-    return g.subgraph([node] + list(ug.neighbors(node))), potentialEdges
+    # potentialEdges = g.subgraph(all_neighbours ).edges(data=True)
+    return g.subgraph(all_neighbours)#, potentialEdges
 
+def load_CKN(fname):
 
-def load_edge_directions(fname):
-    directions = {}
-    with open(fname) as csvfile:
-        dialect = csv.Sniffer().sniff(csvfile.read(2048))
-        csvfile.seek(0)
-        reader = csv.DictReader(csvfile, dialect=dialect)
-        for row in reader:
-            directions[row['intType']] = True if row['isDirected'].upper() == 'Y' else False
-    return directions
-
-
-def load_CKN(fname, directions):
-    ckn = nx.MultiGraph()
-    with open(fname) as csvfile:
-        reader = csv.reader(csvfile, delimiter='\t')
-        for i, row in enumerate(reader):
-            if i > 0:
-                ckn.add_edge(row[0], row[1], type=row[2], rank=row[3], species=row[4], directed=directions[row[2]])
+    with open(fname, "rb") as handle:
+        handle.readline() # header
+        ckn = nx.read_edgelist(handle,
+                    delimiter="\t",
+                    create_using=nx.DiGraph,
+                    data=[
+                        ('effect', str),
+                        ('type', str),
+                        ('rank', str),
+                        ('species', str),
+                        ('isDirected', int),
+                        ('isTFregulation', int),
+                        ('interactionSources', str),
+                        ("hyperlink", str),
+                    ])
     return ckn
 
 
@@ -114,7 +109,7 @@ def add_attributes(ckn, fname):
         reader = csv.DictReader(csvfile, dialect=dialect)
         attNames = set(reader.fieldnames) - {'nodeID'}
         for row in reader:
-            nodeAttributes[row['nodeID']] = {atr: row[atr] for atr in attNames}
+            nodeAttributes[row['node_ID']] = {atr: row[atr] for atr in attNames}
     nx.set_node_attributes(ckn, nodeAttributes)
 
 
@@ -125,8 +120,8 @@ def get_autocomplete_node_data(g):
         elt['id'] = nodeid
         elt['name'] = nodeid
         # elt = {'id': nodeid, 'name': nodeid}
-        # for atr in ['name', 'synonyms', 'description', 'evidence_sentence'] + [f'{sp}_homologues' for sp in SPECIES]:
-        #     elt[atr] = attrs.get(atr, '')
+        for atr in ['short_name', 'TAIR', 'full_name', 'synonyms', 'GMM']:
+            elt[atr] = attrs.get(atr, '')
         # elt['synonyms'] = ', '.join(elt['synonyms'])
         data.append(elt)
     return {'node_data': data}
@@ -134,16 +129,16 @@ def get_autocomplete_node_data(g):
 
 def extract_subgraph(g, nodes, k=1):
     nodes = [node for node in nodes if node in g.nodes]
-
     all_neighbours = set(nodes)
     fromnodes = nodes
     for i in range(k):
-        neighbours = set(itertools.chain.from_iterable([g.neighbors(node) for node in fromnodes]))  # - set(fromnodes)
+        neighbours = set(itertools.chain.from_iterable([g.to_undirected().neighbors(node) for node in fromnodes]))  # - set(fromnodes)
         if not neighbours:
             break
         all_neighbours.update(neighbours)
         fromnodes = neighbours
     result = g.subgraph(all_neighbours).copy()
+    # print(type(g), "result: ", result.number_of_nodes(), result.number_of_edges())
     return result
 
 
@@ -154,8 +149,9 @@ def extract_shortest_paths(g, query_nodes):
     else:
         paths_nodes = []
         for fr, to in itertools.combinations(query_nodes, 2):
+            print("here")
             try:
-                paths = [p for p in nx.all_shortest_paths(g, source=fr, target=to)]
+                paths = [p for p in nx.all_shortest_paths(g.to_undirected(), source=fr, target=to)]
                 # print(paths)
                 paths_nodes.extend([item for path in paths for item in path])
             except nx.NetworkXNoPath:
@@ -178,36 +174,179 @@ def filter_edges_for_display(g):
     g.remove_edges_from(to_remove)
 
 
-def graph2json(g, query_nodes=[]):
-    groups_json = {'CKN node': {'shape': 'box',
-                              'color': {'background': 'white'}}}
+
+
+
+EDGE_TYPE_STYLE = {
+    'binding':  {
+        'color': {'color': "#57007D", 'hover': '#0000FF'},
+        'label': 'binding',
+        'dashes': True
+    },
+    'small RNA interactions': {
+        'color': {'color': "#BA3E6D", 'hover': '#0000FF'},
+        'label': 'sRNA'
+    },
+    'transcription factor regulation': {
+        'color': {'color': "#0E9B9B", 'hover': '#0000FF'},
+        'label': 'TF'
+    },
+    'post-translational modification': {
+        'color': {'color': "#AA4000", 'hover': '#0000FF'},
+        'label': 'PTM'
+    },
+    'other': {
+        'color': {'color': "#0099CC", 'hover': '#0000FF'},
+        'label': 'other'
+    }
+}
+
+EDGE_EFFECT_STYLE = {
+    'unk':  {
+        'arrows': {'to': {'enabled': True, 'type': 'circle', 'scaleFactor':0.8}},
+    },
+    'inh': {
+        'arrows': {'to': {'enabled': True, 'type': 'bar', 'scaleFactor':0.8}}
+    },
+    'act': {
+        'arrows': {'to': {'enabled': True, 'type': 'arrow', 'scaleFactor':0.8}}
+    },
+    'phosphorylation': {
+        'arrows': {'to': {'enabled': True, 'type': 'circle', 'scaleFactor':0.8}}
+    },
+    'act/inh': {
+        'arrows': {'to': {'enabled': True, 'type': 'arrow', 'scaleFactor':0.8}}
+    }
+}
+
+RANK_WIDTH = {
+    '0': 4,
+    '1': 3.2,
+    '2': 2.5,
+    '3': 1,
+    '4': 0.6,
+}
+
+def edge_style(attrs):
+    e = EDGE_TYPE_STYLE[attrs['type']].copy()
+    e['arrows'] = EDGE_EFFECT_STYLE[attrs['effect']]['arrows'].copy()
+    if not attrs['isDirected']:
+        e['arrows']['from'] = e['arrows']['to']
+    e['width'] = RANK_WIDTH[attrs["rank"]]
+
+    return e
+
+NODE_STYLE = {
+    'complex': {
+        'shape': 'box',
+        'color': {'background': '#9cd6e4', 'border': '#40b0cb'}
+    },
+    # plant genes -- shades of green,
+    'protein_coding': {
+        'shape': 'box',
+        'color': {'background': '#66CDAA', 'border': '#48c39a'}
+    },
+    'mirna': {
+        'shape': 'box',
+        'color': {'background': '#98FB98', 'border': '#057c05'}
+    },
+    'transposable_element_gene': {
+        'shape': 'box',
+        'color': {'background': '#98FB98', 'border': '#057c05'}
+    },
+    'pseudogene': {
+        'shape': 'box',
+        'color': {'background': '#98FB98', 'border': '#057c05'}
+    },
+    'antisense_long_noncoding_rna': {
+        'shape': 'box',
+        'color': {'background': '#98FB98', 'border': '#057c05'}
+    },
+    'pre_trna': {
+        'shape': 'box',
+        'color': {'background': '#98FB98', 'border': '#057c05'}
+    },
+    'other_rna': {
+        'shape': 'box',
+        'color': {'background': '#98FB98', 'border': '#057c05'}
+    },
+    'small_nucleolar_rna': {
+        'shape': 'box',
+        'color': {'background': '#98FB98', 'border': '#057c05'}
+    },
+    'small_nuclear_rna': {
+        'shape': 'box',
+        'color': {'background': '#98FB98', 'border': '#057c05'}
+    },
+    'biotic': {
+        'shape': 'diamond',
+        'color': {'background': '#cd853f', 'border': '#965e27'}
+    },
+    'abiotic': {
+        'shape': 'diamond',
+        'color': {'background': '#cd3f40', 'border': '#a62b2c'}
+    },
+    # every one else,
+    'metabolite': {
+        'shape': 'circle',
+        'color': {'background': '#fff0f5', 'border': '#ff6799'}
+    },
+    'process': {
+        'shape': 'box',
+        'color': {'background': '#c4bcff', 'border': '#6e5aff'}
+    },
+    'default': {
+        'shape': 'box',
+        'color': {'background': 'White', 'border': '#6c7881'}
+    }
+}
+
+def graph2json(g, query_nodes=None):
+    if not query_nodes:
+        query_nodes = []
+
+    # groups_json = {'CKN node': {'shape': 'box',
+    #                           'color': {'background': 'white'}}}
+
+    groups = set()
+    for nodeid, attrs in g.nodes(data=True):
+        groups.add(attrs['node_type'])
+
+    groups_json = {}
+    for elt in groups:
+        if elt in NODE_STYLE:
+            groups_json[elt] = NODE_STYLE[elt]
+        else:
+            groups_json[elt] = NODE_STYLE['default']
+
     nlist = []
     for nodeid, attrs in g.nodes(data=True):
+        group = attrs['node_type']
+
         nodeData = copy.copy(attrs)
         nodeData['id'] = nodeid
+        nodeData['group'] = group
 
-        if attrs['a4_short-name'] != '-':
-            nodeData['label'] = attrs['a4_short-name']
-        else:
-            nodeData['label'] = nodeid
+        nodeData['label'] = attrs['short_name']
+
+
 
         if nodeid in query_nodes:
-            nodeData['color'] = {'border': 'red',
-                                 'background': 'white',
+            nodeData['color'] = {'background': groups_json[group]['color']['background'],
+                                 'border': 'red',
                                  'highlight': {'border': 'red'},  # this does not work, bug in vis.js
                                  'hover': {'border': 'red'}}  # this does not work, bug in vis.js
             nodeData['borderWidth'] = 2
+
         nlist.append(nodeData)
 
     elist = []
     for fr, to, attrs in g.edges(data=True):
-        elist.append({'from': fr,
-                      'to': to,
-                      'label': attrs['type'],
-                      'type': attrs['type'],
-                      'rank': attrs['rank'],
-                      'species': attrs['species'],
-                      'directed': attrs['directed'],
-                      'arrows': {'to': {'enabled': True}} if attrs['directed'] else {'to': {'enabled': False}}
-                      })
+        e = {**attrs, **edge_style(attrs)}
+        e['from'] = fr
+        e['to'] = to
+
+        # print(fr, to)
+        elist.append(e)
+
     return {'network': {'nodes': nlist, 'edges': elist}, 'groups': groups_json}

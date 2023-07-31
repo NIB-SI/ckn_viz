@@ -22,18 +22,19 @@ $(window).resize(function() {
     scale();
 });
 
+
 function enableSpinner() {
     // disable button
+    console.log("enableSpinner")
     $('#searchButton').prop("disabled", true);
-    // add spinner to button
-    $('#searchButton').html(`<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> searching...`);
+    $('#spinner').dialog( 'open' );
 }
 
 function disableSpinner() {
     // enable button
     $('#searchButton').prop("disabled", false);
-    // add back text only
-    $('#searchButton').html('search');
+    $('#spinner').dialog( 'close' );
+
 }
 
 function enableSuggestSpinner() {
@@ -55,7 +56,7 @@ function buildSelectWidget() {
         valueField: "id",
         labelField: "name",
         sortField: "id",
-        searchField: ['id', 'a2_description', 'a4_short-name', 'a5_synonyms', 'a6_functional-annotation-gmm'],
+        searchField: ['id', 'full_name', 'short_name', 'synonyms', 'GMM'],
         highlight: false,
         render: {
         //   item: function (item, escape) {
@@ -63,11 +64,11 @@ function buildSelectWidget() {
         // },
           option: function (item, escape) {
             let maxlen = 50;
-            let shortName = item['a4_short-name'].length>0 ? '<span class="name"> {} </span>'.format(v.truncate(escape(item['a4_short-name']), maxlen - 'short name:'.length)) : "";
-            let nodeID = '<span class="caption"> <strong>identifier:</strong> {} </span>'.format(v.truncate(escape(item.id), maxlen));
-            let description = item.a2_description.length>0 ? '<span class="caption"> <strong>description:</strong> {} </span>'.format(v.truncate(escape(item.a2_description), maxlen - 'description:'.length)) : "";
-            let synonyms = item.a5_synonyms.length>0 ? '<span class="caption"> <strong>synonyms:</strong> {} </span>'.format(v.truncate(escape(item.a5_synonyms), maxlen - 'synonyms:'.length)) : "";
-            let funcAnnot = item['a6_functional-annotation-gmm'].length>0 ? '<span class="caption"> <strong>func. annot. (GMM):</strong> {} </span>'.format(v.truncate(escape(item['a6_functional-annotation-gmm']), maxlen - 'func. annot. (GMM):'.length)) : "";
+            let shortName = item['short_name'].length>0 ? '<span class="name"> {} </span>'.format(v.truncate(escape(item['short_name']), maxlen - 'short name:'.length)) : "";
+            let tair =  item.TAIR.length>0 ? '<span class="caption"> <strong>TAIR identifier:</strong> {} </span>'.format(item.TAIR): "";
+            let description = item.full_name.length>0 ? '<span class="caption"> <strong>description:</strong> {} </span>'.format(v.truncate(escape(item.full_name), maxlen - 'description:'.length)) : "";
+            let synonyms = item.synonyms.length>0 ? '<span class="caption"> <strong>synonyms:</strong> {} </span>'.format(v.truncate(escape(item.synonyms), maxlen - 'synonyms:'.length)) : "";
+            let gmm = item['GMM'].length>0 ? '<span class="caption"> <strong>GMM:</strong> {} </span>'.format(v.truncate(escape(item['GMM']), maxlen - 'GMM:'.length)) : "";
 
             return '<div>\
             {}\
@@ -75,13 +76,19 @@ function buildSelectWidget() {
             {}\
             {}\
             {}\
-            </div>'.format(shortName, nodeID, description, synonyms, funcAnnot);
+            </div>'.format(shortName, tair, description, synonyms, gmm);
           },
         }
     });
 }
 
 $( document ).ready(function() {
+
+    $('#spinner' ).dialog({ autoOpen: false,
+                             dialogClass: "no-close",
+                             modal: true
+    });
+
     $.ajax({
       url: "/ckn/get_node_data",
       // async: false,
@@ -105,7 +112,7 @@ $( document ).ready(function() {
 
     $('#add2selected').click(function(){
         var selected_values = select[0].selectize.getValue();
-        // var maxlen = 100;
+        var maxlen = 50;
         // console.log(selected_values);
         selected_values.forEach(function (item, index) {
             let node = node_search_data_dict[item];
@@ -120,14 +127,12 @@ $( document ).ready(function() {
             //     {}\
             //     </a>'.format(nodeName, node_id);
 
-            let title = node['a4_short-name']!= '-' ? node['a4_short-name'] : v.truncate(node.id, 25);
-            let identifier = '<small><strong>identifier: </strong>{}</small>'.format(node.id, 25);
+            let title = node['short_name']!= '-' ? node['short_name'] : v.truncate(node.short_name, 25);
+            let tair = node['TAIR'].length>0 ? '<small><strong>TAIR identifier: </strong>{}</small>'.format(node.TAIR, 25): "";
             let node_id = '<div hidden class="node_id">{}</div>'.format(node.id);
-            let shortName = node['a4_short-name']>0 ? '<small><strong>short name: </strong>{}</small>'.format(node['a4_short-name']) : "";
-            let synonyms = node.a5_synonyms.length>0 ? '<small><strong>synonyms: </strong>{}</small>'.format(node.a5_synonyms) : "";
-            let description = node.a2_description.length>0 ? '<small><strong>description: </strong>{}</small>'.format(node.a2_description) : "";
-            let funcAnnot = node['a6_functional-annotation-gmm'].length>0 ? '<small><strong>func. annotation (GMM): </strong>{}</small>'.format(node['a6_functional-annotation-gmm']) : "";
-
+            let shortName = node['short_name'].length>0 ? '<small><strong>Short name: </strong>{}</small>'.format(node['short_name']) : "";
+            let synonyms = node.synonyms.length>0 ? '<small><strong>Synonyms: </strong>{}</small>'.format(v.truncate(node.synonyms, maxlen)) : "";
+            let description = node.full_name.length>0 ? '<small><strong>Description: </strong>{}</small>'.format(node.full_name) : "";
             let list_item = '<a href="#" class="list-group-item list-group-item-action">\
                 <div class="d-flex w-100 justify-content-between">\
                 <h5 class="mb-1">{}</h5>\
@@ -138,8 +143,7 @@ $( document ).ready(function() {
                 {}\
                 {}\
                 {}\
-                </a>'.format(title, identifier, synonyms, description, funcAnnot, node_id);
-
+                </a>'.format(title, tair, shortName, synonyms, description, node_id);
 
          $('#queryList').append(list_item);
          // scroll to bottom
@@ -156,8 +160,10 @@ $( document ).ready(function() {
 
 
     $('#searchButton').click(function(){
-        if($('.node_id').toArray().length==0)
+
+        if($('.node_id').toArray().length==0){
             return;
+        }
 
         enableSpinner();
 
@@ -167,16 +173,22 @@ $( document ).ready(function() {
           type: "POST",
           contentType: 'application/json; charset=utf-8',
           processData: false,
-          data: JSON.stringify({'nodes': $('.node_id').toArray().map(x => $(x).text())}),
+          data: JSON.stringify({'nodes': $('.node_id').toArray().map(x => $(x).text()), 'limit_ranks':$('#limit_ranks').is(':checked')}),
           success: function( data, textStatus, jQxhr ){
-              // console.log(data);
+            // console.log(data);
               netviz.isFrozen = false;
-              drawNetwork(data);
+              if (data.error){
+                alert('Could not complete request, perhaps unlimit ranks?');
+                disableSpinner();
+              } else{
+                drawNetwork(data);
               // disableSpinner();
               // console.log(data.network);
               // $('#response pre').html( JSON.stringify( data ) );
+            }
           },
           error: function( jqXhr, textStatus, errorThrown ){
+              console.log("error");
               disableSpinner();
               alert('Server error while loading the network.');
           }
@@ -207,9 +219,10 @@ $( document ).ready(function() {
         else if ($(this).attr('href') == '#edges') {
             export_edges();
         }
+        else if ($(this).attr('href') == '#png') {
+            export_png();
+        }
     });
-
-
 });
 
 
@@ -225,6 +238,7 @@ function drawNetwork(graphdata){
          nodes: netviz.nodes,
          edges: netviz.edges
      };
+
 
      // console.log(data);
      var options = {groups: graphdata.groups,
@@ -245,17 +259,18 @@ function drawNetwork(graphdata){
                             size: 9,
                             face: 'sans',
                             align: 'top', //'middle'
-                            color: '#808080'
                         },
                         chosen: {
                             label: hover_edge_label
                         },
-                        color: {color: 'dimgrey', hover: 'blue'},
-                        hoverWidth: 0.6
+                        endPointOffset: {
+                          from: 0,
+                          to: -5
+                        },
+                        // arrowStrikethrough: false,
+                        hoverWidth: 2,
                         },
                     nodes: {
-                        shape: 'box',
-                        color: '#9BDBFF',
                         widthConstraint: { maximum: 100},
                         font: {
                             multi: 'html'
@@ -338,12 +353,15 @@ function postprocess_edge(item) {
                   </table>';
     let data = [['Type', item.type],
                 ['Rank', item.rank],
+                ['Type', item.type],
                 ['Species', item.species],
-                ['Directed', item.directed ? 'yes': 'no']];
+                ['Directed', Boolean(item.isDirected)],
+                ['TF regulation', Boolean(item.isTFregulation)],
+                ['Source(s)', item.hyperlink.replaceAll("|", "<br>")]];
 
     let table = '';
     data.forEach(function (item, index) {
-        if (item[1] !=null && item[1].length>0) {
+        if (item[1] !=null) {
             let row = '<tr>\
                             <td><strong>{}</strong></td>\
                             <td class="text-wrap">{}</td>\
@@ -369,12 +387,15 @@ function postprocess_node(node) {
     let footer = '</tbody>\
                   </table>';
 
-    let data = [['ID', node.label],
-                ['Type', node.a1_nodeType],
-                ['Short name', node['a4_short-name']],
-                ['Description', node.a2_description],
-                ['Synonyms', node.a5_synonyms],
-                ['Func. annot. (GMM)', node['a6_functional-annotation-gmm']]];
+    let data = [
+                ['Short name', node.short_name],
+                ['TAIR', node.TAIR.length>0 ? '<a target="_blank" href="https://www.arabidopsis.org/servlets/TairObject?name={}&type=locus">{}</a>'.format(node.TAIR, node.TAIR) : ''],
+                ['Type', node.node_type],
+                ['Description', node.full_name],
+                ['Synonyms', node.synonyms],
+                ['GMM annotation', node.GMM],
+                ['Note', node.note]];
+
 
     let table = '';
     data.forEach(function (pair, index) {
@@ -382,7 +403,7 @@ function postprocess_node(node) {
             let row = '<tr>\
                             <td><strong>{}</strong></td>\
                             <td class="text-wrap">{}</td>\
-                       </tr>'.format(pair[0], pair[1]);
+                       </tr>'.format(pair[0], pair[1].replaceAll("|", "<br>"));
             table += row;
         }
     });
@@ -467,6 +488,10 @@ function edge_present(edges, newEdge) {
 }
 
 function expandNode(nid) {
+    console.log("expandNode")
+
+    enableSpinner()
+
     $.ajax({
       url: "/ckn/expand",
       async: false,
@@ -474,13 +499,15 @@ function expandNode(nid) {
       type: "POST",
       contentType: 'application/json; charset=utf-8',
       processData: false,
-      data: JSON.stringify({'nodes': [nid], 'all_nodes': netviz.nodes.getIds()}),
+      data: JSON.stringify({'nodes': [nid], 'all_nodes': netviz.nodes.getIds(), 'limit_ranks':$('#limit_ranks').is(':checked')}),
       success: function( data, textStatus, jQxhr ){
           if (data.error) {
-              vex.dialog.alert('Server error when expanding the node. Please report the incident.')
+              vex.dialog.alert('Server error when expanding the node. Please report the incident.');
+              disableSpinner()
           }
           else {
-              let newCounter = 0
+              let newCounter = 0;
+              // console.log(data)
               data.network.nodes.forEach((item, i) => {
                   if (!netviz.nodes.get(item.id)) {
                       netviz.nodes.add(postprocess_node(item));
@@ -493,21 +520,24 @@ function expandNode(nid) {
 
               data.network.edges.forEach((newEdge, i) => {
                   if(!edge_present(netviz.edges, newEdge)) {
-                      netviz.edges.add(newEdge);
+                      // console.log(newEdge.from, newEdge.to)
+                      netviz.edges.add(postprocess_edge(newEdge));
                       newCounter += 1;
                   }
               })
 
-              data.network.potential_edges.forEach((edge, i) => {
-                  if(!edge_present(netviz.edges, edge)) {
-                      netviz.edges.add(edge);
-                      newCounter += 1;
-                  }
-              })
+              // data.network.potential_edges.forEach((edge, i) => {
+              //     if(!edge_present(netviz.edges, edge)) {
+              //         netviz.edges.add(postprocess_edge(edge));
+              //         newCounter += 1;
+              //     }
+              // })
 
               if (newCounter==0) {
+                console.log(newCounter)
                   vex.dialog.alert('No nodes or edges can be added.');
               }
+              disableSpinner()
           }
       },
       error: function( jqXhr, textStatus, errorThrown ){
@@ -577,8 +607,8 @@ function initContextMenus() {
                                 netviz.nodes.remove(hoveredNode);
                             }
                             else if (key == "expand") {
-                                // expandNode(hoveredNode.id);
-                                vex.dialog.alert("Not yet implemented.");
+                                expandNode(hoveredNode.id);
+                                // vex.dialog.alert("Not yet implemented.");
                             }
                             else if (key == "fix") {
                                 netviz.nodes.update({id: hoveredNode.id, fixed: true});
@@ -655,11 +685,11 @@ function export_nodes() {
         return;
     }
 
-    var data = [['id', 'type', 'short name', 'description', 'synonyms', 'functional annotation (GoMapMan)']];
+    var data = [['id', 'type', 'short name', 'description', 'synonyms', 'GMM', 'note']];
     netviz.nodes.forEach(function(node, id){
         var line = new Array;
 
-        ['id', 'a1_nodeType', 'a4_short-name', 'a2_description', 'a5_synonyms', 'a6_functional-annotation-gmm'].forEach(function(aname){
+        ['id', 'node_type', 'short_name', 'full_name', 'synonyms', 'GMM', 'note'].forEach(function(aname){
             let atr = node[aname];
             if (atr != undefined)
                 line.push(format_cell(atr));
@@ -687,11 +717,11 @@ function export_edges(){
         return;
     }
 
-    var data = [['from','to','directed','rank','type','species']];
+    var data = [['from','to','isDirected','rank','type','species', 'isTFregulation', 'interactionSources']];
     netviz.edges.forEach(function(edge, id){
         var line = new Array;
 
-        ['from', 'to', 'directed', 'rank', 'type', 'species'].forEach(function(aname){
+        ['from', 'to', 'isDirected', 'rank', 'type', 'species', 'isTFregulation', 'interactionSources'].forEach(function(aname){
             let atr = edge[aname];
             if (atr != undefined)
                 line.push(format_cell(atr));
@@ -710,4 +740,17 @@ function export_edges(){
 
     var blob = new Blob([csv], {type: "text/csv;charset=utf-8"});
     saveAs(blob, "edges.csv");
+}
+
+function export_png(){
+    if(netviz.nodes==undefined) {
+        vex.dialog.alert('No image to export! You need to do a search first.');
+        return;
+    }
+
+    const ctx = netviz.network.canvas.getContext()
+    const dataURL = ctx.canvas.toDataURL('image/png');
+
+    saveAs(dataURL, "network.png");
+
 }

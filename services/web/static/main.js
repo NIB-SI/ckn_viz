@@ -394,7 +394,9 @@ function postprocess_node(node) {
                 ['Description', node.full_name],
                 ['Synonyms', node.synonyms],
                 ['GMM annotation', node.GMM],
-                ['Note', node.note]];
+                ['Note', node.note],
+                ['KnetMiner', node.TAIR.length>0 ? '<p><a target="_blank" href="https://knetminer.com/araknet/genepage?{}">Search for {} in KnetMiner</a></p>'.format(jQuery.param({list:node.TAIR}), node.TAIR) : '']
+    ];
 
 
     let table = '';

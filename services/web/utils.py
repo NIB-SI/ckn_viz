@@ -120,9 +120,10 @@ def get_autocomplete_node_data(g):
         elt['id'] = nodeid
         elt['name'] = nodeid
         # elt = {'id': nodeid, 'name': nodeid}
-        for atr in ['short_name', 'TAIR', 'full_name', 'synonyms', 'GMM']:
+        for atr in ['short_name', 'TAIR', 'full_name', 'GMM']:
             elt[atr] = attrs.get(atr, '')
-        # elt['synonyms'] = ', '.join(elt['synonyms'])
+        for i, s in enumerate(attrs.get('synonyms', '').split("|")):
+            elt[f'synonyms_{i}'] = s
         data.append(elt)
     return {'node_data': data}
 

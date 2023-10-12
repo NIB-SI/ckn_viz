@@ -3,7 +3,7 @@
 ###########
 
 # pull official base image
-FROM python:3.8 as builder
+FROM continuumio/miniconda3:23.5.2-0
 
 # set work directory
 WORKDIR /usr/src/app
@@ -16,20 +16,21 @@ ENV PYTHONUNBUFFERED 1
 COPY ./requirements.txt .
 RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/app/wheels -r requirements.txt
 
-
 #########
 # FINAL #
 #########
 
 # pull official base image
-FROM python:3.8
+FROM continuumio/miniconda3:23.5.2-0
+
+RUN conda install -c conda-forge -y gcc
+RUN conda install -c conda-forge graph-tool
 
 # create directory for the app user
 RUN mkdir -p /home/app
 
 # create the app user
 RUN addgroup --system app && adduser --system --group app
-
 
 # create the appropriate directories
 ENV HOME=/home/app

@@ -29,7 +29,7 @@
           {% endfor %}
 
         <h5 class="mb-0 mt-2">Include tissue expressed genes:</h5>
-          {% for i in ['root','stem','flower','seed','leaf'] %}
+          {% for i in ['root','stem','flower','seed','leaf', 'not assigned'] %}
             <div class="vstack gap-3">
               <input class="form-check-input" type="checkbox" id="limit_tissues_{{i}}" checked="true", value="{{i}}">
               <label class="mx-2" for="limit_tissues_{{i}}">{{i}}</label>

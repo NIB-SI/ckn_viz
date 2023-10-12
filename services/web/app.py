@@ -22,7 +22,7 @@ BASEDIR = os.path.dirname(__file__)
 CKN_PATH = os.path.join(BASEDIR, 'data/AtCKN-v2-2023.06-biomine.tsv')
 ANNOTATIONS_PATH = os.path.join(BASEDIR, 'data/AtCKN-v2-2023.06_node-annot.tsv')
 
-NODE_DRAW_LIMIT = 100
+NODE_DRAW_LIMIT = 25
 EDGE_DRAW_LIMIT = 1000
 
 ckn = utils.CKN(CKN_PATH, ANNOTATIONS_PATH, force=True)
@@ -46,7 +46,7 @@ def search():
     except Exception as e:
         return {'error': 'Invalid query data'}
 
-    print("limit_ranks:", limit_ranks, "\tlimit_tissues:", limit_tissues)
+    # print("limit_ranks:", limit_ranks, "\tlimit_tissues:", limit_tissues)
 
     if len(query_nodes) == 0:
         return {'error': 'Invalid query data'}
@@ -55,7 +55,7 @@ def search():
     if subgraph.num_vertices() == 0:
         return {'error': 'No result'}
 
-    print(subgraph.num_vertices(), subgraph.num_edges())
+    # print(subgraph.num_vertices(), subgraph.num_edges())
     json_data = utils.graph2json(subgraph, query_nodes=query_nodes, node_limit=NODE_DRAW_LIMIT, edge_limit=EDGE_DRAW_LIMIT)
 
     return json.dumps(json_data)
@@ -83,7 +83,7 @@ def expand():
     #     e['to'] = to
     #     elist.append(e)
 
-    json_data = utils.graph2json(subgraph)
+    json_data = utils.graph2json(subgraph, node_limit=NODE_DRAW_LIMIT, edge_limit=EDGE_DRAW_LIMIT)
     # json_data['network']['potential_edges'] = elist
 
     # print(len(subgraph), len(potentialEdges))

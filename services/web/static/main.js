@@ -192,13 +192,17 @@ $( document ).ready(function() {
                 'limit_tissues':limit_tissues
             }),
           success: function( data, textStatus, jQxhr ){
-            // console.log(data);
+              console.log("received search result");
               netviz.isFrozen = false;
               if (data.error){
+                console.log(data.error)
                 alert('Could not complete request, perhaps change the filters?');
                 disableSpinner();
               } else{
                 drawNetwork(data);
+                if(data.message){
+                    alert(data.message)
+                }
               // disableSpinner();
               // console.log(data.network);
               // $('#response pre').html( JSON.stringify( data ) );
@@ -410,6 +414,7 @@ function postprocess_node(node) {
                 ['Description', node.full_name],
                 ['Synonyms', node.synonyms],
                 ['GMM annotation', node.GMM],
+                ['Tissue (TAIR Plant Ontology)', node.tissue],
                 ['Note', node.note],
                 ['KnetMiner', node.TAIR.length>0 ? '<p><a target="_blank" href="https://knetminer.com/araknet/genepage?{}">Search for {} in KnetMiner</a></p>'.format(jQuery.param({list:node.TAIR}), node.TAIR) : '']
     ];
@@ -536,6 +541,7 @@ function expandNode(nid) {
         'limit_tissues':limit_tissues
       }),
       success: function( data, textStatus, jQxhr ){
+          console.log("received expand result");
           if (data.error) {
               vex.dialog.alert('Server error when expanding the node. Please report the incident.');
               disableSpinner()
@@ -573,6 +579,9 @@ function expandNode(nid) {
                   vex.dialog.alert('No nodes or edges can be added.');
               }
               disableSpinner()
+              if(data.message){
+                    alert(data.message)
+                }
           }
       },
       error: function( jqXhr, textStatus, errorThrown ){

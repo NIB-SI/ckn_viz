@@ -64,6 +64,7 @@ class CKN(object):
     def __init__(self,  edge_path, node_path, force=False, headers={}):
 
         self.graph = self.load_CKN(edge_path, node_path)
+        self.filter(limit_tissues=['root'])
         self.node_search_data = self.get_autocomplete_node_data()
 
     def load_CKN(self,  edge_path, node_path):
@@ -91,19 +92,26 @@ class CKN(object):
             header = node_file.readline()
             header = header.strip().split("\t")
 
-            for prop_name in header:
+            for prop_name in header[:-1]:
                 prop = ckn.new_vertex_property(tname) # Create the PropertyMap
                 ckn.vertex_properties[prop_name] = prop # Set the PropertyMap
+
+            prop_name = "tissue"
+            prop = ckn.new_vertex_property('vector<string>')
+            ckn.vertex_properties[prop_name] = prop
 
             for line in node_file:
                 d = {k:v for k, v in zip(header, line.strip().split("\t"))}
                 node = gt_util.find_vertex(ckn, ckn.vp["name"], d["node_ID"])
                 if len(node) == 1:
                     node = node[0]
-                    for key in d:
-                            ckn.vp[key][node] = d[key]
+                    for key in header[:-1]:
+                        ckn.vp[key][node] = d[key]
+                    key = "tissue"
+                    ckn.vp[key][node] = d[key].split(",")
 
         print(ckn.list_properties())
+
         return ckn
 
     def get_autocomplete_node_data(self):
@@ -128,10 +136,12 @@ class CKN(object):
 
         if limit_ranks:
             u = gt.GraphView(u, efilt=lambda x: u.ep['rank'][x] in limit_ranks)
-        # if limit_tissues:
-        #     u = gt.GraphView(u, vfilt=lambda x: g.vp['tissue'][x] in limit_tissues)
+        if limit_tissues:
+            limit_tissues = set(limit_tissues)
+            # 9+'c'
+            u = gt.GraphView(u, vfilt=lambda x: bool(set(u.vp['tissue'][x]) & limit_tissues))
 
-        # print("CKN filtered:", u.num_vertices(), u.num_edges())
+        print("CKN filtered:", u.num_vertices(), u.num_edges())
 
         return u
 
@@ -144,7 +154,7 @@ class CKN(object):
         else:
             result_nodes = self.extract_shortest_paths(filtered_view, query_nodes)
 
-        print("Final result:", len(result_nodes), result_nodes)
+        # print("Final result:", len(result_nodes), result_nodes)
         # [print("node:", filtered_view.vp['name'][node]) for node in result_nodes]
 
         result = gt.GraphView(filtered_view, vfilt=lambda x: x in result_nodes)
@@ -173,7 +183,7 @@ class CKN(object):
 
         paths_nodes = []
         for fr, to in itertools.combinations(nodes, 2):
-            print("here")
+            # print("here")
             paths = [p for p in gt_topology.all_shortest_paths(graph, source=fr, target=to)]
             # print(paths)
             paths_nodes.extend([item for path in paths for item in path])
@@ -184,7 +194,6 @@ class CKN(object):
 
         return paths_nodes
         # g.subgraph(paths_nodes).copy()
-
 
     def expand_nodes(self, nodes, all_shown_nodes, limit_ranks=None, limit_tissues=None):
         if len(nodes) > 1:
@@ -211,19 +220,6 @@ class CKN(object):
         result = gt.GraphView(filtered_view, vfilt=lambda x: x in all_neighbours)
 
         return result
-
-
-
-
-
-def filter_edges_for_display(g):
-    to_remove = []
-    for fr, to, key, attrs in g.edges(data=True, keys=True):
-        # show edges according to Ziva's rule
-        if not attrs['directed'] and attrs['type'] != 'binding':
-            to_remove.append((fr, to, key))
-            print(f'Removed: {fr}{to}: {attrs}')
-    g.remove_edges_from(to_remove)
 
 EDGE_TYPE_STYLE = {
     'binding':  {
@@ -356,34 +352,36 @@ def graph2json(graph, query_nodes=None, node_limit=None, edge_limit=None):
     Limit edges -- ??
 
     '''
+    message = ''
     print("graph2json:", graph.num_vertices(), graph.num_edges())
-    [print(graph.vp['name'][node]) for node in graph.vertices()]
-
+    # [print(graph.vp['name'][node]) for node in graph.vertices()]
 
     if not query_nodes:
         query_nodes = []
 
-
     # make graph smaller (for rendering)
     num_vertices = graph.num_vertices()
     if node_limit and (num_vertices > node_limit):
+        print("Query len:", len(query_nodes))
         pr = pagerank(graph)
         pr_array = pr.get_array()
         top_n_index = pr_array.argpartition(-(node_limit+1))[-(node_limit+1)]
         graph = gt.GraphView(graph, vfilt=lambda x: (pr[x] > pr_array[top_n_index]) or (x in query_nodes))
+        message = f'Query resulted in {num_vertices} nodes, but the output is limited to display {node_limit} nodes. '
 
     num_vertices = graph.num_vertices()
     num_edges = graph.num_edges()
 
-    print("Restricted:", num_vertices, num_edges)
+    # TODO
     # if edge_limit and (num_edges > edge_limit):
-    #     # make graph smaller (for rendering)
-    #     if query_nodes:
-    #         keep_nodes = set(query_nodes)
-    #     else:
-    #         keep_nodes = set()
+    #     keep_edges = []
+    #     i = 0
+    #     for node in query_nodes:
+    #         for e in node.all_edges():
+    #             if i > edge_limit:
+    #                 break
 
-
+    print("Limited:", num_vertices, num_edges)
 
     groups = set()
     for node in graph.vertices():
@@ -407,6 +405,7 @@ def graph2json(graph, query_nodes=None, node_limit=None, edge_limit=None):
         nodeData['id'] = int(node)
         nodeData['group'] = node_type
         nodeData['label'] = nodeData['short_name']
+        nodeData['tissue'] = ','.join(graph.vp['tissue'][node])
 
         if node in query_nodes:
             nodeData['color'] = {'background': groups_json[group]['color']['background'],
@@ -431,4 +430,4 @@ def graph2json(graph, query_nodes=None, node_limit=None, edge_limit=None):
         # print(fr, to)
         elist.append(edgeData)
 
-    return {'network': {'nodes': nlist, 'edges': elist}, 'groups': groups_json}
+    return {'network': {'nodes': nlist, 'edges': elist}, 'groups': groups_json, 'message': message}

@@ -11,9 +11,33 @@
 {% block search_interface %}
 
   <div class="mb-3">
-    <div class="vstack gap-3">
-      <input class="form-check-input" type="checkbox" id="limit_ranks" value="" aria-label="...">
-      <label class="mx-2" for="form-check-ranks">limit to rank 0, 1, and 2 edges</label>
+
+    <div class="accordion-item">
+      <h5 class="accordion-header" id="heading-filters">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#filters" aria-expanded="false" aria-controls="filters">
+              Filters
+            </button>
+      </h5>
+      <div id="filters" class="accordion-collapse collapse" aria-labelledby="heading-filters" >
+        <div class="accordion-body">
+        <h5 class="mb-0 mt-2">Include edge ranks:</h5>
+          {% for p in [(0, "checked"), (1, "checked"), (2, "checked"), (3, ""), (4, "")] %}
+            <div class="vstack gap-3">
+              <input class="form-check-input" type="checkbox" id="limit_ranks_{{ p[0] }}" {{ p[1] }} value="{{ p[0] }}">
+              <label class="mx-2" for="limit_ranks_{{ p[0] }}">rank {{ p[0] }}</label>
+            </div>
+          {% endfor %}
+
+        <h5 class="mb-0 mt-2">Include tissue expressed genes:</h5>
+          {% for i in ['root','stem','flower','seed','leaf'] %}
+            <div class="vstack gap-3">
+              <input class="form-check-input" type="checkbox" id="limit_tissues_{{i}}" checked="true", value="{{i}}">
+              <label class="mx-2" for="limit_tissues_{{i}}">{{i}}</label>
+            </div>
+          {% endfor %}
+
+        </div>
+      </div>
     </div>
   </div>
 

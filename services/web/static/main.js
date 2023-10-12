@@ -56,7 +56,7 @@ function buildSelectWidget() {
         valueField: "id",
         labelField: "name",
         sortField: "id",
-        searchField: ['id', 'full_name', 'short_name', 'synonyms', 'GMM'],
+        searchField: ['id', 'name', 'TAIR', 'full_name', 'short_name', 'synonyms', 'GMM'],
         highlight: false,
         render: {
         //   item: function (item, escape) {
@@ -167,18 +167,35 @@ $( document ).ready(function() {
 
         enableSpinner();
 
+
+        var limit_ranks = [];
+        $("input:checked[type='checkbox'][id^='limit_ranks']").each(function() {
+            limit_ranks.push($(this).attr('value'));
+        });
+        // console.log(limit_ranks);
+
+        var limit_tissues = [];
+        $("input:checked[type='checkbox'][id^='limit_tissues']").each(function() {
+            limit_tissues.push($(this).attr('value'));
+        });
+        // console.log(limit_tissues);
+
         $.ajax({
           url: "/ckn/search",
           dataType: 'json',
           type: "POST",
           contentType: 'application/json; charset=utf-8',
           processData: false,
-          data: JSON.stringify({'nodes': $('.node_id').toArray().map(x => $(x).text()), 'limit_ranks':$('#limit_ranks').is(':checked')}),
+          data: JSON.stringify({
+                'nodes': $('.node_id').toArray().map(x => $(x).text()),
+                'limit_ranks':limit_ranks,
+                'limit_tissues':limit_tissues
+            }),
           success: function( data, textStatus, jQxhr ){
             // console.log(data);
               netviz.isFrozen = false;
               if (data.error){
-                alert('Could not complete request, perhaps unlimit ranks?');
+                alert('Could not complete request, perhaps change the filters?');
                 disableSpinner();
               } else{
                 drawNetwork(data);
@@ -353,7 +370,6 @@ function postprocess_edge(item) {
                   </table>';
     let data = [['Type', item.type],
                 ['Rank', item.rank],
-                ['Type', item.type],
                 ['Species', item.species],
                 ['Directed', Boolean(item.isDirected)],
                 ['TF regulation', Boolean(item.isTFregulation)],
@@ -494,6 +510,18 @@ function expandNode(nid) {
 
     enableSpinner()
 
+    var limit_ranks = [];
+    $("input:checked[type='checkbox'][id^='limit_ranks']").each(function() {
+        limit_ranks.push($(this).attr('value'));
+    });
+    // console.log(limit_ranks);
+
+    var limit_tissues = [];
+    $("input:checked[type='checkbox'][id^='limit_tissues']").each(function() {
+        limit_tissues.push($(this).attr('value'));
+    });
+    // console.log(limit_tissues);
+
     $.ajax({
       url: "/ckn/expand",
       async: false,
@@ -501,7 +529,12 @@ function expandNode(nid) {
       type: "POST",
       contentType: 'application/json; charset=utf-8',
       processData: false,
-      data: JSON.stringify({'nodes': [nid], 'all_nodes': netviz.nodes.getIds(), 'limit_ranks':$('#limit_ranks').is(':checked')}),
+      data: JSON.stringify({
+        'nodes': [nid],
+        'all_nodes': netviz.nodes.getIds(),
+        'limit_ranks':limit_ranks,
+        'limit_tissues':limit_tissues
+      }),
       success: function( data, textStatus, jQxhr ){
           if (data.error) {
               vex.dialog.alert('Server error when expanding the node. Please report the incident.');
@@ -543,6 +576,7 @@ function expandNode(nid) {
           }
       },
       error: function( jqXhr, textStatus, errorThrown ){
+          disableSpinner();
           alert('Server error while loading node data.');
       }
     });
@@ -666,7 +700,6 @@ function initContextMenus() {
                 }
             }
         });
-
 }
 
 

@@ -20,32 +20,13 @@ sess = Session()
 
 BASEDIR = os.path.dirname(__file__)
 CKN_PATH = os.path.join(BASEDIR, 'data/AtCKN-v2-2023.06-biomine.tsv')
-CKN_FILTERED_PATH = os.path.join(BASEDIR, 'data/AtCKN-v2-2023.06-filtered-biomine.tsv')
 ANNOTATIONS_PATH = os.path.join(BASEDIR, 'data/AtCKN-v2-2023.06_node-annot.tsv')
-# CKN_PATH = os.path.join(BASEDIR, 'data/sample.tsv')
 
+NODE_DRAW_LIMIT = 100
+EDGE_DRAW_LIMIT = 1000
 
-class CKN(object):
-    def __init__(self, force=False):
-        self.graph = None
-        self.load(force=force)
-
-    def load(self, force=False, headers={}):
-        if force or self.graph is None:
-
-            self.graph = utils.load_CKN(CKN_PATH)#, self.edge_directions)
-            utils.add_attributes(self.graph, ANNOTATIONS_PATH)
-
-            self.graph_filtered = utils.load_CKN(CKN_FILTERED_PATH)
-            utils.add_attributes(self.graph_filtered, ANNOTATIONS_PATH)
-
-            self.node_search_data = utils.get_autocomplete_node_data(self.graph)
-            print("loaded")
-
-ckn = CKN(force=True)
-
-print(ckn.graph.number_of_nodes(), ckn.graph.number_of_edges())
-
+ckn = utils.CKN(CKN_PATH, ANNOTATIONS_PATH, force=True)
+print(ckn.graph.num_vertices(), ckn.graph.num_edges())
 
 bp = Blueprint('bp', __name__,
                url_prefix='/ckn',
@@ -59,25 +40,25 @@ def node_data():
 def search():
     try:
         data = request.get_json(force=False)
-        query_nodes = set(data.get('nodes'))
-        limit_ranks = bool(data.get('limit_ranks'))
+        query_nodes = set([int(x) for x in data.get('nodes')])
+        limit_ranks = data.get('limit_ranks')
+        limit_tissues = data.get('limit_tissues')
     except Exception as e:
         return {'error': 'Invalid query data'}
 
-    print("limit_ranks", limit_ranks)
-    if limit_ranks:
-        g = ckn.graph_filtered
-        query_nodes = [n for n in query_nodes if n in g.nodes()]
-    else:
-        g = ckn.graph
+    print("limit_ranks:", limit_ranks, "\tlimit_tissues:", limit_tissues)
 
     if len(query_nodes) == 0:
         return {'error': 'Invalid query data'}
 
-    subgraph = utils.extract_shortest_paths(g, query_nodes)
-    print(subgraph.number_of_nodes(), subgraph.number_of_edges())
+    subgraph = ckn.extract_query(query_nodes, limit_ranks=limit_ranks, limit_tissues=limit_tissues)
+    if subgraph.num_vertices() == 0:
+        return {'error': 'No result'}
 
-    return json.dumps(utils.graph2json(subgraph, query_nodes=query_nodes))
+    print(subgraph.num_vertices(), subgraph.num_edges())
+    json_data = utils.graph2json(subgraph, query_nodes=query_nodes, node_limit=NODE_DRAW_LIMIT, edge_limit=EDGE_DRAW_LIMIT)
+
+    return json.dumps(json_data)
 
 #   AT1G07530
 @bp.route('/expand', methods=['GET', 'POST'])
@@ -86,18 +67,13 @@ def expand():
         data = request.get_json(force=False)
         query_nodes = set(data.get('nodes'))
         all_nodes = set(data.get('all_nodes'))
-        limit_ranks = bool(data.get('limit_ranks'))
+        limit_ranks = data.get('limit_ranks')
+        limit_tissues = data.get('limit_tissues')
     except Exception as e:
         return {'error': 'Invalid query data'}
 
-    if limit_ranks:
-        g = ckn.graph_filtered
-        query_nodes = [n for n in query_nodes if n in g.nodes()]
-    else:
-        g = ckn.graph
-
     # potential edges are on the second level and may link to the existing graph
-    subgraph = utils.expand_nodes(g, list(query_nodes), all_nodes)
+    subgraph = ckn.expand_nodes(list(query_nodes), all_nodes, limit_ranks=limit_ranks, limit_tissues=limit_tissues)
 
     # # write potential edges in JSON
     # elist = []
@@ -122,9 +98,6 @@ def main():
         headers = {'Userid': session['_user_id']}
     else:
         headers = {}
-
-    # refresh pss
-    ckn.load(headers=headers)
 
     return render_template('index.html')
 

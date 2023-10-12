@@ -10,6 +10,12 @@ from html.entities import name2codepoint as n2cp
 
 import networkx as nx
 
+
+import graph_tool as gt
+from graph_tool import util as gt_util
+from graph_tool import topology as gt_topology
+from graph_tool.centrality import pagerank
+
 # from fuzzywuzzy import fuzz, process
 
 import requests
@@ -52,117 +58,162 @@ def decode_htmlentities(text):
     return RE_HTML_ENTITY.sub(substitute_entity, text)
 
 
-def expand_nodes(g, nodes, all_shown_nodes):
-    if len(nodes) > 1:
-        print('Error : expand not implemented for more than one node')
-    node = nodes[0]
-    # ug = nx.Graph(g)
 
-    # find also neighbours on the second level to connect to the rest of the graph (if possible)
-    all_neighbours = set(nodes)
-    fromnodes = nodes
-    for i in range(1):
-        neighbours = set(itertools.chain.from_iterable([g.to_undirected().neighbors(node) for node in fromnodes]))  # - set(fromnodes)
-        if not neighbours:
-            break
-        all_neighbours.update(neighbours)
-        fromnodes = neighbours
+class CKN(object):
 
-    # # vsi pari med all_neighbours in all_shown_nodes
-    # potentialEdges = []
-    # for fr, to in [(a, b) for a in set(all_neighbours)-set(nodes) for b in set(all_shown_nodes)-set(nodes)]:
-    #     print('considering: ', fr, to)
-    #     if g.has_edge(fr, to):
-    #         edges = g.get_edge_data(fr, to)
-    #         for k in edges:
-    #             print(fr, to, k, edges[k])
-    #             potentialEdges.append((fr, to, edges[k]))
+    def __init__(self,  edge_path, node_path, force=False, headers={}):
 
-    # potentialEdges = g.subgraph(all_neighbours ).edges(data=True)
-    return g.subgraph(all_neighbours)#, potentialEdges
+        self.graph = self.load_CKN(edge_path, node_path)
+        self.node_search_data = self.get_autocomplete_node_data()
 
-def load_CKN(fname):
+    def load_CKN(self,  edge_path, node_path):
 
-    with open(fname, "rb") as handle:
-        handle.readline() # header
-        ckn = nx.read_edgelist(handle,
-                    delimiter="\t",
-                    create_using=nx.DiGraph,
-                    data=[
-                        ('effect', str),
-                        ('type', str),
-                        ('rank', str),
-                        ('species', str),
-                        ('isDirected', int),
-                        ('isTFregulation', int),
-                        ('interactionSources', str),
-                        ("hyperlink", str),
-                    ])
-    return ckn
+        ckn = gt.load_graph_from_csv(
+            edge_path,
+            directed=False,
+            eprop_types=[
+                "string",
+                "string",
+                "string",
+                "string",
+                "bool",
+                "bool",
+                "string",
+                "string"
+            ],
+            skip_first=True,
+            strip_whitespace=True,
+            csv_options={"delimiter":"\t"})
 
+        # help from https://bbengfort.github.io/2016/06/graph-tool-from-networkx/
+        tname = "string"
+        with open(node_path, "r") as node_file:
+            header = node_file.readline()
+            header = header.strip().split("\t")
 
-def add_attributes(ckn, fname):
-    nodeAttributes = {}
-    with open(fname) as csvfile:
-        dialect = csv.Sniffer().sniff(csvfile.read(2048))
-        csvfile.seek(0)
-        reader = csv.DictReader(csvfile, dialect=dialect)
-        attNames = set(reader.fieldnames) - {'nodeID'}
-        for row in reader:
-            nodeAttributes[row['node_ID']] = {atr: row[atr] for atr in attNames}
-    nx.set_node_attributes(ckn, nodeAttributes)
+            for prop_name in header:
+                prop = ckn.new_vertex_property(tname) # Create the PropertyMap
+                ckn.vertex_properties[prop_name] = prop # Set the PropertyMap
 
+            for line in node_file:
+                d = {k:v for k, v in zip(header, line.strip().split("\t"))}
+                node = gt_util.find_vertex(ckn, ckn.vp["name"], d["node_ID"])
+                if len(node) == 1:
+                    node = node[0]
+                    for key in d:
+                            ckn.vp[key][node] = d[key]
 
-def get_autocomplete_node_data(g):
-    data = []
-    for nodeid, attrs in g.nodes(data=True):
-        elt = copy.copy(attrs)
-        elt['id'] = nodeid
-        elt['name'] = nodeid
-        # elt = {'id': nodeid, 'name': nodeid}
-        for atr in ['short_name', 'TAIR', 'full_name', 'GMM']:
-            elt[atr] = attrs.get(atr, '')
-        for i, s in enumerate(attrs.get('synonyms', '').split("|")):
-            elt[f'synonyms_{i}'] = s
-        data.append(elt)
-    return {'node_data': data}
+        print(ckn.list_properties())
+        return ckn
 
+    def get_autocomplete_node_data(self):
+        data = []
+        for node in self.graph.vertices():
 
-def extract_subgraph(g, nodes, k=1):
-    nodes = [node for node in nodes if node in g.nodes]
-    all_neighbours = set(nodes)
-    fromnodes = nodes
-    for i in range(k):
-        neighbours = set(itertools.chain.from_iterable([g.to_undirected().neighbors(node) for node in fromnodes]))  # - set(fromnodes)
-        if not neighbours:
-            break
-        all_neighbours.update(neighbours)
-        fromnodes = neighbours
-    result = g.subgraph(all_neighbours).copy()
-    # print(type(g), "result: ", result.number_of_nodes(), result.number_of_edges())
-    return result
+            elt = {'id':int(node)}
+            for atr in ['name', 'short_name', 'TAIR', 'full_name', 'GMM']:
+                elt[atr] = self.graph.vp[atr][node]
 
+            synonyms = self.graph.vp['synonyms'][node]
+            elt[f'synonyms'] = synonyms
+            for i, s in enumerate(synonyms.split("|")):
+                elt[f'synonyms_{i}'] = s
+            data.append(elt)
 
-def extract_shortest_paths(g, query_nodes):
-    if len(query_nodes) == 1:
-        subgraph = extract_subgraph(g, query_nodes, k=1)
-        paths_nodes = subgraph.nodes()
-    else:
+        return {'node_data': data}
+
+    def filter(self, limit_ranks=None, limit_tissues=None):
+
+        u = self.graph
+
+        if limit_ranks:
+            u = gt.GraphView(u, efilt=lambda x: u.ep['rank'][x] in limit_ranks)
+        # if limit_tissues:
+        #     u = gt.GraphView(u, vfilt=lambda x: g.vp['tissue'][x] in limit_tissues)
+
+        # print("CKN filtered:", u.num_vertices(), u.num_edges())
+
+        return u
+
+    def extract_query(self, query_nodes, limit_ranks=None, limit_tissues=None):
+
+        filtered_view = self.filter(limit_ranks=limit_ranks, limit_tissues=limit_tissues)
+
+        if len(query_nodes) == 1:
+            result_nodes = self.extract_neighbourhood(filtered_view, query_nodes, k=1)
+        else:
+            result_nodes = self.extract_shortest_paths(filtered_view, query_nodes)
+
+        print("Final result:", len(result_nodes), result_nodes)
+        # [print("node:", filtered_view.vp['name'][node]) for node in result_nodes]
+
+        result = gt.GraphView(filtered_view, vfilt=lambda x: x in result_nodes)
+        # [print("graph", result.vp['name'][node]) for node in result.vertices()]
+        return result
+
+    def extract_neighbourhood(self, graph, nodes, k=1):
+
+        # [print(graph.vp['name'][node]) for node in nodes]
+
+        nodes = [node for node in nodes if node in graph.vertices()]
+
+        all_neighbours = set(nodes)
+        fromnodes = nodes
+        for i in range(k):
+            neighbours = set(itertools.chain.from_iterable([graph.get_all_neighbors(node) for node in fromnodes]))  # - set(fromnodes)
+            if not neighbours:
+                break
+            all_neighbours.update(neighbours)
+            fromnodes = neighbours
+
+        # [print(graph.vp['name'][node]) for node in all_neighbours]
+        return all_neighbours
+
+    def extract_shortest_paths(self, graph, nodes):
+
         paths_nodes = []
-        for fr, to in itertools.combinations(query_nodes, 2):
+        for fr, to in itertools.combinations(nodes, 2):
             print("here")
-            try:
-                paths = [p for p in nx.all_shortest_paths(g.to_undirected(), source=fr, target=to)]
-                # print(paths)
-                paths_nodes.extend([item for path in paths for item in path])
-            except nx.NetworkXNoPath:
-                print('No paths:', fr, to)
-                pass
+            paths = [p for p in gt_topology.all_shortest_paths(graph, source=fr, target=to)]
+            # print(paths)
+            paths_nodes.extend([item for path in paths for item in path])
+
         # add back also nodes with no paths
         # this also covers the case with no paths at all
-        paths_nodes = set(paths_nodes).union(query_nodes)
+        paths_nodes = set(paths_nodes).union(nodes)
 
-    return g.subgraph(paths_nodes).copy()
+        return paths_nodes
+        # g.subgraph(paths_nodes).copy()
+
+
+    def expand_nodes(self, nodes, all_shown_nodes, limit_ranks=None, limit_tissues=None):
+        if len(nodes) > 1:
+            print('Error : expand not implemented for more than one node')
+        node = nodes[0]
+
+        filtered_view = self.filter(limit_ranks=limit_ranks, limit_tissues=limit_tissues)
+
+        all_neighbours = self.extract_neighbourhood(filtered_view, nodes, k=1)
+
+        # # vsi pari med all_neighbours in all_shown_nodes
+        # potentialEdges = []
+        # for fr, to in [(a, b) for a in set(all_neighbours)-set(nodes) for b in set(all_shown_nodes)-set(nodes)]:
+        #     print('considering: ', fr, to)
+        #     if g.has_edge(fr, to):
+        #         edges = g.get_edge_data(fr, to)
+        #         for k in edges:
+        #             print(fr, to, k, edges[k])
+        #             potentialEdges.append((fr, to, edges[k]))
+
+        # potentialEdges = g.subgraph(all_neighbours ).edges(data=True)
+
+
+        result = gt.GraphView(filtered_view, vfilt=lambda x: x in all_neighbours)
+
+        return result
+
+
+
 
 
 def filter_edges_for_display(g):
@@ -173,10 +224,6 @@ def filter_edges_for_display(g):
             to_remove.append((fr, to, key))
             print(f'Removed: {fr}{to}: {attrs}')
     g.remove_edges_from(to_remove)
-
-
-
-
 
 EDGE_TYPE_STYLE = {
     'binding':  {
@@ -221,7 +268,7 @@ EDGE_EFFECT_STYLE = {
 }
 
 RANK_WIDTH = {
-    '0': 4,
+    '0': 5,
     '1': 3.2,
     '2': 2.5,
     '3': 1,
@@ -302,16 +349,45 @@ NODE_STYLE = {
     }
 }
 
-def graph2json(g, query_nodes=None):
+def graph2json(graph, query_nodes=None, node_limit=None, edge_limit=None):
+    '''
+    Limit nodes -- query_nodes + top nodes ordered by page rank
+
+    Limit edges -- ??
+
+    '''
+    print("graph2json:", graph.num_vertices(), graph.num_edges())
+    [print(graph.vp['name'][node]) for node in graph.vertices()]
+
+
     if not query_nodes:
         query_nodes = []
 
-    # groups_json = {'CKN node': {'shape': 'box',
-    #                           'color': {'background': 'white'}}}
+
+    # make graph smaller (for rendering)
+    num_vertices = graph.num_vertices()
+    if node_limit and (num_vertices > node_limit):
+        pr = pagerank(graph)
+        pr_array = pr.get_array()
+        top_n_index = pr_array.argpartition(-(node_limit+1))[-(node_limit+1)]
+        graph = gt.GraphView(graph, vfilt=lambda x: (pr[x] > pr_array[top_n_index]) or (x in query_nodes))
+
+    num_vertices = graph.num_vertices()
+    num_edges = graph.num_edges()
+
+    print("Restricted:", num_vertices, num_edges)
+    # if edge_limit and (num_edges > edge_limit):
+    #     # make graph smaller (for rendering)
+    #     if query_nodes:
+    #         keep_nodes = set(query_nodes)
+    #     else:
+    #         keep_nodes = set()
+
+
 
     groups = set()
-    for nodeid, attrs in g.nodes(data=True):
-        groups.add(attrs['node_type'])
+    for node in graph.vertices():
+        groups.add(graph.vp['node_type'][node])
 
     groups_json = {}
     for elt in groups:
@@ -321,18 +397,18 @@ def graph2json(g, query_nodes=None):
             groups_json[elt] = NODE_STYLE['default']
 
     nlist = []
-    for nodeid, attrs in g.nodes(data=True):
-        group = attrs['node_type']
+    for node in graph.vertices():
+        nodeData = {}
+        group = node_type = graph.vp['node_type'][node]
 
-        nodeData = copy.copy(attrs)
-        nodeData['id'] = nodeid
-        nodeData['group'] = group
+        for atr in ['short_name', 'TAIR', 'node_type', 'full_name', 'synonyms', 'GMM', 'note']:
+            nodeData[atr] = graph.vp[atr][node]
 
-        nodeData['label'] = attrs['short_name']
+        nodeData['id'] = int(node)
+        nodeData['group'] = node_type
+        nodeData['label'] = nodeData['short_name']
 
-
-
-        if nodeid in query_nodes:
+        if node in query_nodes:
             nodeData['color'] = {'background': groups_json[group]['color']['background'],
                                  'border': 'red',
                                  'highlight': {'border': 'red'},  # this does not work, bug in vis.js
@@ -342,12 +418,17 @@ def graph2json(g, query_nodes=None):
         nlist.append(nodeData)
 
     elist = []
-    for fr, to, attrs in g.edges(data=True):
-        e = {**attrs, **edge_style(attrs)}
-        e['from'] = fr
-        e['to'] = to
+    for edge  in graph.edges():
+        edgeData = {}
+
+        for atr in ['type', 'rank', 'species', 'effect', 'isDirected', 'isTFregulation', 'hyperlink']:
+            edgeData[atr] = graph.ep[atr][edge]
+
+        edgeData = {**edgeData, **edge_style(edgeData)}
+        edgeData['from'] = int(edge.source())
+        edgeData['to'] = int(edge.target())
 
         # print(fr, to)
-        elist.append(e)
+        elist.append(edgeData)
 
     return {'network': {'nodes': nlist, 'edges': elist}, 'groups': groups_json}

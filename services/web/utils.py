@@ -77,8 +77,8 @@ class CKN(object):
                 "string",
                 "string",
                 "string",
-                "bool",
-                "bool",
+                "int",
+                "int",
                 "string",
                 "string"
             ],

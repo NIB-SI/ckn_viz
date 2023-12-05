@@ -42,13 +42,11 @@ def decode_htmlentities(text):
             else:
                 # they were using a name
                 cp = n2cp.get(ent)
-                if cp:
-                    return safe_unichr(cp)
-                else:
-                    return match.group()
+                return safe_unichr(cp) if cp else match.group()
         except Exception:
             # in case of errors, return original input
             return match.group()
+
     return RE_HTML_ENTITY.sub(substitute_entity, text)
 
 
@@ -61,7 +59,7 @@ def expand_nodes(g, nodes, all_shown_nodes):
     # find also neighbours on the second level to connect to the rest of the graph (if possible)
     all_neighbours = set(nodes)
     fromnodes = nodes
-    for i in range(1):
+    for _ in range(1):
         neighbours = set(itertools.chain.from_iterable([g.neighbors(node) for node in fromnodes]))  # - set(fromnodes)
         if not neighbours:
             break
@@ -74,13 +72,10 @@ def expand_nodes(g, nodes, all_shown_nodes):
         print('considering: ', fr, to)
         if g.has_edge(fr, to):
             edges = g.get_edge_data(fr, to)
-            for k in edges:
-                potentialEdges.append((fr, to, edges[k]))
+            potentialEdges.extend((fr, to, edges[k]) for k in edges)
         elif g.has_edge(to, fr):
             edges = g.get_edge_data(to, fr)
-            for k in edges:
-                potentialEdges.append((to, fr, edges[k]))
-
+            potentialEdges.extend((to, fr, edges[k]) for k in edges)
     # potentialEdges = g.subgraph(all_neighbours).edges(data=True)
     return g.subgraph([node] + list(ug.neighbors(node))), potentialEdges
 
@@ -92,7 +87,7 @@ def load_edge_directions(fname):
         csvfile.seek(0)
         reader = csv.DictReader(csvfile, dialect=dialect)
         for row in reader:
-            directions[row['intType']] = True if row['isDirected'].upper() == 'Y' else False
+            directions[row['intType']] = row['isDirected'].upper() == 'Y'
     return directions
 
 
@@ -137,14 +132,13 @@ def extract_subgraph(g, nodes, k=1):
 
     all_neighbours = set(nodes)
     fromnodes = nodes
-    for i in range(k):
+    for _ in range(k):
         neighbours = set(itertools.chain.from_iterable([g.neighbors(node) for node in fromnodes]))  # - set(fromnodes)
         if not neighbours:
             break
         all_neighbours.update(neighbours)
         fromnodes = neighbours
-    result = g.subgraph(all_neighbours).copy()
-    return result
+    return g.subgraph(all_neighbours).copy()
 
 
 def extract_shortest_paths(g, query_nodes):
@@ -155,12 +149,11 @@ def extract_shortest_paths(g, query_nodes):
         paths_nodes = []
         for fr, to in itertools.combinations(query_nodes, 2):
             try:
-                paths = [p for p in nx.all_shortest_paths(g, source=fr, target=to)]
+                paths = list(nx.all_shortest_paths(g, source=fr, target=to))
                 # print(paths)
                 paths_nodes.extend([item for path in paths for item in path])
             except nx.NetworkXNoPath:
                 print('No paths:', fr, to)
-                pass
         # add back also nodes with no paths
         # this also covers the case with no paths at all
         paths_nodes = set(paths_nodes).union(query_nodes)
@@ -195,15 +188,19 @@ def graph2json(g, query_nodes=[]):
             nodeData['borderWidth'] = 2
         nlist.append(nodeData)
 
-    elist = []
-    for fr, to, attrs in g.edges(data=True):
-        elist.append({'from': fr,
-                      'to': to,
-                      'label': attrs['type'],
-                      'type': attrs['type'],
-                      'rank': attrs['rank'],
-                      'species': attrs['species'],
-                      'directed': attrs['directed'],
-                      'arrows': {'to': {'enabled': True}} if attrs['directed'] else {'to': {'enabled': False}}
-                      })
+    elist = [
+        {
+            'from': fr,
+            'to': to,
+            'label': attrs['type'],
+            'type': attrs['type'],
+            'rank': attrs['rank'],
+            'species': attrs['species'],
+            'directed': attrs['directed'],
+            'arrows': {'to': {'enabled': True}}
+            if attrs['directed']
+            else {'to': {'enabled': False}},
+        }
+        for fr, to, attrs in g.edges(data=True)
+    ]
     return {'network': {'nodes': nlist, 'edges': elist}, 'groups': groups_json}

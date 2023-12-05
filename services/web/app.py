@@ -114,11 +114,7 @@ def create_app(test_config=None):
     @cross_origin()
     def main():
 
-        if '_user_id' in session:
-            headers = {'Userid': session['_user_id']}
-        else:
-            headers = {}
-
+        headers = {'Userid': session['_user_id']} if '_user_id' in session else {}
         # refresh pss
         ckn.load(headers=headers)
 

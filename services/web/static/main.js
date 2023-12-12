@@ -104,6 +104,7 @@ $( document ).ready(function() {
           node_search_data_dict = Object.assign({}, ...node_search_data.map((x) => ({[x.id]: x})));
           disableSuggestSpinner();
           buildSelectWidget();
+          check_URLparams();
       },
       error: function( jqXhr, textStatus, errorThrown ){
           alert('Server error while loading node data.');
@@ -216,7 +217,6 @@ $( document ).ready(function() {
         });
     });
 
-
     $("#showTooltipsCbox").change(function() {
         if (netviz.network) {
             if (this.checked) {
@@ -232,7 +232,6 @@ $( document ).ready(function() {
     scale();
     initContextMenus();
 
-
     $('#saveAsDropdown a').click(function(){
         if ($(this).attr('href') == '#nodes') {
             export_nodes();
@@ -246,6 +245,33 @@ $( document ).ready(function() {
     });
 });
 
+function check_URLparams(){
+
+    urlParams = new URLSearchParams(window.location.search);
+    identifier_list = urlParams.getAll('identifier');
+    console.log(identifier_list);
+
+    if(identifier_list.length>0){
+        for (var i = identifier_list.length - 1; i >= 0; i--) {
+            id_ = identifier_list[i]
+
+            var j = -1
+            for (let x of node_search_data) {
+               if (x.TAIR == id_){
+                j = x.id;
+                break;
+               }
+            }
+            if (j == -1){
+                alert(id_ + ' is not a valid identifier' )
+            } else {
+                select[0].selectize.addItem(j);
+                $('#add2selected').click()
+            }
+        }
+    }
+    $('#searchButton').click();
+}
 
 function drawNetwork(graphdata){
      netviz.nodes = new vis.DataSet(graphdata.network.nodes);

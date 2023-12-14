@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 
-{% block title %}CKN explorer{% endblock %}
+{% block title %}CKN Explorer{% endblock %}
 
-{% block page_title %}CKN explorer{% endblock %}
+{% block page_title %}CKN Explorer{% endblock %}
 
 {% block description %}
   <p> Use the searchbox to find nodes in CKN and add them to the query box.
@@ -107,5 +107,22 @@
   <span> Searching... </span>
 </div>
 
+<!-- https://getbootstrap.com/docs/4.0/components/popovers/#dismiss-on-next-click -->
+    <a id="tip_popover"
+       style="top:45px; right:40px; position: absolute; z-index: 99;"
+       class="py-0  btn btn-outline-danger btn-xs inline"
+       tabindex="0"
+       role="button"
+       data-trigger="focus"
+       data-toggle="popover"
+       data-bs-content='
+   <div style="width:100%;">
+            <p>Right click on an edge or node to access its context menu.</p>
+            <p>Double click on a node to expand its neighbours.
+  </div>' data-bs-html="true" title="Network tips">
+      Tip!
+    </a>
+
 
 {% endblock %}
+

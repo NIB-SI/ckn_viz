@@ -65,7 +65,7 @@
         <div class="row" style="height:calc(100vh - 60px);"> <!-- h-100"> -->
           <div class="px-1 col-xs-6 col-sm-5 col-md-5 col-lg-4 col-xl-3 col-xxl-3 border-end border-light border-2" id="configColumn">
             <form class="h-100" id="searchform">
-              <div class="pt-3">
+              <div>
                   <h1 class="card-title"> {% block page_title %}{% endblock %} </h1>
                   <div  class="card-text"> {% block description %}{% endblock %} </div>
               </div>
@@ -81,13 +81,13 @@
             </form>
           </div>
 
-          <div class="col-xs-6 col-sm-7 col-md-7 col-lg-8 col-xl-9 col-xxl-9 h-100" id="networkViewContainer">
+            <div class="col-xs-6 col-sm-7 col-md-7 col-lg-8 col-xl-9 col-xxl-9 h-100" id="networkViewContainer">
               <div id="networkView"></div>
           </div>
         </div>
-
       <div id="footer" class=""></div>
     </div>
+
 
   </body>
 
@@ -97,8 +97,12 @@
     // enable all popover in the document:
     $(document).ready(function () {
         $('[data-toggle="popover"]').popover({
-          container: 'body'
-        })
+          container: 'body',
+          trigger: 'focus',
+          delay: 200,
+        });
     });
+
+
   </script>
 </html>

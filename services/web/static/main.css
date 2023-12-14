@@ -1,19 +1,34 @@
 #queryList {
-    min-height: 300px;
-    height: calc(100vh - 700px);
+    min-height: 250px;
+    height: calc(100vh - 800px);
 }
 
 #searchform {
     margin: 20px;
 }
 
+#configColumn {
+    overflow-y: scroll;
+}
+
+#configColumn {
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;  /* Firefox */
+}
+#configColumn::-webkit-scrollbar {
+    display: none;  /* Safari and Chrome */
+}
+
+
 .list-group{
     padding: 3px;
     /* min-height: 300px;
     max-height: 400px; */
     margin-bottom: 10px;
-    /* overflow:scroll; */
-    overflow-y:auto;
+/*     overflow:scroll; */
+    overflow-y:scroll;
+    overflow-x:hidden;
+
     -webkit-overflow-scrolling: touch;
     border: 1px solid lightgray;
 }

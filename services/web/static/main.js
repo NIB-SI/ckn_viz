@@ -372,6 +372,8 @@ function drawNetwork(graphdata){
     netviz.network.on('dragStart', onDragStart);
     netviz.network.on('dragEnd', onDragEnd);
 
+    netviz.network.on("doubleClick", onDoubleClick);
+
     netviz.network.on("stabilizationIterationsDone", function (params) {
         disableSpinner();
    });
@@ -509,6 +511,12 @@ function onDragEnd(obj) {
     }
 }
 
+function onDoubleClick (obj) {
+    // get the id of the clicked node
+    var clickedNodeId = obj.nodes[0];
+    expandNode(clickedNodeId)
+}
+
 function formatNodeInfoVex(nid) {
     return netviz.nodes.get(nid).title;
 }
@@ -537,6 +545,12 @@ function edge_present(edges, newEdge) {
 }
 
 function expandNode(nid) {
+
+    if (!netviz.nodes.getIds().includes(nid)){
+        console.log("not a node in the current network")
+        return
+    }
+
     console.log("expandNode")
 
     enableSpinner()

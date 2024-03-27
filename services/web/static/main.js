@@ -801,11 +801,11 @@ function export_edges(){
         return;
     }
 
-    var data = [['from','to','isDirected','rank','type','species', 'isTFregulation', 'interactionSources']];
+    var data = [['from', 'to', 'isDirected', 'rank', 'type', 'effect', 'species', 'isTFregulation', 'interactionSources']];
     netviz.edges.forEach(function(edge, id){
         var line = new Array;
 
-        ['from', 'to', 'isDirected', 'rank', 'type', 'species', 'isTFregulation', 'interactionSources'].forEach(function(aname){
+        ['from', 'to', 'isDirected', 'rank', 'type', 'effect', 'species', 'isTFregulation', 'interactionSources'].forEach(function(aname){
             let atr = edge[aname];
             if (atr != undefined)
                 line.push(format_cell(atr));

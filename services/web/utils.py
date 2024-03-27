@@ -420,7 +420,7 @@ def graph2json(graph, query_nodes=None, node_limit=None, edge_limit=None):
     for edge  in graph.edges():
         edgeData = {}
 
-        for atr in ['type', 'rank', 'species', 'effect', 'isDirected', 'isTFregulation', 'hyperlink']:
+        for atr in ['type', 'rank', 'species', 'effect', 'isDirected', 'isTFregulation', 'interactionSources', 'hyperlink']:
             edgeData[atr] = graph.ep[atr][edge]
 
         edgeData = {**edgeData, **edge_style(edgeData)}

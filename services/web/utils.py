@@ -181,6 +181,8 @@ class CKN(object):
 
     def extract_shortest_paths(self, graph, nodes):
 
+        nodes = [node for node in nodes if node in graph.vertices()]
+
         paths_nodes = []
         for fr, to in itertools.combinations(nodes, 2):
             # print("here")

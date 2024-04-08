@@ -42,11 +42,8 @@ function enableSuggestSpinner() {
 }
 
 function disableSuggestSpinner() {
-    $('#searchSelectWrapper').html(`<label for="queryInput" class="form-label">Search CKN</label>    <div id="myModal">
-            <select id="queryInput" class="select_items"></select>
-        </div>`);
+    $('#searchSelectWrapper').html("");
 }
-
 
 function buildSelectWidget() {
     select = $('#queryInput').selectize({
@@ -131,20 +128,18 @@ $( document ).ready(function() {
             let title = node['short_name']!= '-' ? node['short_name'] : v.truncate(node.short_name, 25);
             let tair = node['TAIR'].length>0 ? '<small><strong>TAIR identifier: </strong>{}</small>'.format(node.TAIR, 25): "";
             let node_id = '<div hidden class="node_id">{}</div>'.format(node.id);
-            let shortName = node['short_name'].length>0 ? '<small><strong>Short name: </strong>{}</small>'.format(node['short_name']) : "";
             let synonyms = node.synonyms.length>0 ? '<small><strong>Synonyms: </strong>{}</small>'.format(v.truncate(node.synonyms, maxlen)) : "";
             let description = node.full_name.length>0 ? '<small><strong>Description: </strong>{}</small>'.format(node.full_name) : "";
             let list_item = '<a href="#" class="list-group-item list-group-item-action">\
                 <div class="d-flex w-100 justify-content-between">\
                 <h5 class="mb-1">{}</h5>\
-                <button type="button" class="btn btn-link btn-sm float-end"><i class="bi-x-circle" style="color: red;"></i></button>\
+                <button type="button" class="btn btn-link btn-sm float-end p-0 m-0"><i class="bi-x-circle" style="color: red;"></i></button>\
                 </div>\
                 {}\
                 {}\
                 {}\
                 {}\
-                {}\
-                </a>'.format(title, tair, shortName, synonyms, description, node_id);
+                </a>'.format(title, tair, synonyms, description, node_id);
 
          $('#queryList').append(list_item);
          // scroll to bottom
@@ -772,7 +767,7 @@ function export_nodes() {
     netviz.nodes.forEach(function(node, id){
         var line = new Array;
 
-        ['id','TAIR', 'node_type', 'short_name', 'full_name', 'synonyms', 'GMM', 'note', 'tissue'].forEach(function(aname){
+        ['id', 'TAIR', 'node_type', 'short_name', 'full_name', 'synonyms', 'GMM', 'note', 'tissue'].forEach(function(aname){
             let atr = node[aname];
             if (atr != undefined)
                 line.push(format_cell(atr));

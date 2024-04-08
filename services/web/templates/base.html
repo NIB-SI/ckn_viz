@@ -63,20 +63,12 @@
     <div class="container-fluid h-100">
 
         <div class="row" style="height:calc(100vh - 60px);"> <!-- h-100"> -->
-          <div class="px-1 col-xs-6 col-sm-5 col-md-5 col-lg-4 col-xl-3 col-xxl-3 border-end border-light border-2" id="configColumn">
-            <form class="h-100" id="searchform">
-              <div>
-                  <h1 class="card-title"> {% block page_title %}{% endblock %} </h1>
-                  <div  class="card-text"> {% block description %}{% endblock %} </div>
-              </div>
-
-              <div class="mb-3">
-                <div class="vstack gap-3">
-                  <input class="form-check-input" type="checkbox" id="showTooltipsCbox" value="" aria-label="...">
-                  <label class="mx-2" for="form-check-input">show tooltips</label>
-                </div>
-              </div>
-
+          <div class="col-xs-6 col-sm-5 col-md-5 col-lg-4 col-xl-3 col-xxl-3 border-end border-light border-2 p-3" id="configColumn">
+            <div>
+                <h1 class="card-title"> {% block page_title %}{% endblock %} </h1>
+                <div  class="card-text"> {% block description %}{% endblock %} </div>
+            </div>
+            <form id="searchform" class="h-100">
               {% block search_interface %}{% endblock %}
             </form>
           </div>
@@ -88,9 +80,57 @@
       <div id="footer" class=""></div>
     </div>
 
-
   </body>
 
+
+<!-- https://getbootstrap.com/docs/4.0/components/popovers/#dismiss-on-next-click -->
+
+<div class="container">
+  <div class="row justify-content-md-center align-items-center" style="top:5px; right:15px; position: absolute; z-index: 99;">
+
+    <div class="col-auto py-0 mx-3 btn bg-white btn-outline">
+      <input class="form-check-input" type="checkbox" id="showTooltipsCbox" value="" aria-label="...">
+      <label class="ms-0" for="form-check-input">Tooltips</label>
+    </div>
+
+    <div class="col dropdown">
+    <button class="py-0 btn dropdown-toggle bg-white" type="button" id="saveAsButton" data-bs-toggle="dropdown" aria-expanded="false">Export network</button>
+    <ul class="dropdown-menu" id="saveAsDropdown" aria-labelledby="saveAsButton">
+       <a class="dropdown-item" href="#nodes">nodes (.csv format)</a>
+       <a class="dropdown-item" href="#edges">edges (.csv format)</a>
+       <a class="dropdown-item" href="#png">image (.png format)</a>
+    </ul>
+  </div>
+
+    <div class="col">
+    <a id="tip_popover"
+       class="py-0  btn btn-outline-info btn-xs inline  bg-white"
+       tabindex="0"
+       role="button"
+       data-trigger="focus"
+       data-toggle="popover"
+       data-bs-content='
+   <div style="width:100%;">
+            <p>Right click on an edge or node to access its context menu.</p>
+            <p>Double click on a node to expand its neighbours. </p>
+            <p>Tick "Tooltips" to enable node and edge info boxes on hover.  </p>
+            <p>Use the "Filters" (bottom left) to limit  the search to nodes in tissues (by Plant Ontology terms)
+              and ranks by reliability. </p>
+            <p>See see <a href="https://skm.nib.si/documentation/ckn-explore" target="_blank">SKM Documentation &#167; CKN</a> for details. </p>
+
+  </div>' data-bs-html="true" title="Network tips">
+      Tips!
+    </a>
+  </div>
+
+  </div>
+</div>
+
+
+<div id="spinner" class="text-center">
+  <span class="spinner-border  spinner-border-sm" role="status" aria-hidden="true"></span>
+  Searching...
+</div>
 
 
   <script type="text/javascript">

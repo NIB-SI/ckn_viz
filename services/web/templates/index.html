@@ -1,19 +1,22 @@
 {% extends 'base.html' %}
 
+
+
+
 {% block title %}CKN Explorer{% endblock %}
 
 {% block page_title %}CKN Explorer{% endblock %}
 
 {% block description %}
-  <p> Use the searchbox to find nodes in CKN and add them to the query box.
+  <p><small>Find nodes in CKN using the searchbox below, add them to the query, and then click "Search!" to extract the subnetwork. </small>
     <button type="button" class="py-0  btn btn-outline-info btn-xs inline" data-toggle="popover" data-bs-content='
    <div style="width:100%;">
 
     <p  class="card-text">
-    <b>Clicking <em>extract subgraph</em>:</b> If the query contains only one node a neighbourhood is returned. Otherwise, the undirected shortest paths between all pairs of nodes are merged and returned.
+    If the query contains only one node a neighbourhood is returned. Otherwise, the undirected shortest paths between all pairs of nodes are merged and returned.
     </p>
 
-   <p> Note that the shortest path does not take into account the direction of the edges. Results are limited to show the top 25 nodes (ranked topologically by page-rank. </p>
+   <p> Note that the shortest path does not take into account the direction of the edges. Results are limited to show the top 25 nodes (ranked topologically by page-rank). </p>
 
     <p>For more information, see <a href="https://skm.nib.si/documentation/ckn-explore" target="_blank">SKM Documentation &#167; CKN</a>. </p>
 
@@ -26,15 +29,32 @@
 
 {% block search_interface %}
 
-  <div class="mb-3">
 
-    <div class="accordion-item">
+<div id="searchSelectWrapper">
+</div>
+<div class="input-group mb-3">
+  <select id="queryInput" class="select_items form-select" placeholder="Search CKN nodes" aria-label="Search CKN nodes" aria-describedby="add2selected" ></select>
+  <button class="btn btn-outline-secondary p-1" type="button" id="add2selected">Add</button>
+</div>
+
+
+
+
+
+
+  <label for="queryList" class="form-label mb-0 pb-0"><h6 class="mb-0 pb-0">Query:</h4></label>
+    <div id="queryList"class="list-group flex-grow-1" style="overflow-y: scroll;"></div>
+
+
+<div id="push_down" class="flex-column w-100 align-self-end">
+  <div class="accordion mt-1 w-100">
+    <div class="accordion-item mb-3">
       <h5 class="accordion-header" id="heading-filters">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#filters" aria-expanded="false" aria-controls="filters">
               Filters
             </button>
       </h5>
-      <div id="filters" class="accordion-collapse collapse" aria-labelledby="heading-filters" >
+      <div id="filters" class="accordion-collapse collapse" aria-labelledby="heading-filters">
         <div class="accordion-body">
         <h5 class="mb-0 mt-2">Include edge ranks:</h5>
           {% for p in [(0, "checked"), (1, "checked"), (2, "checked"), (3, ""), (4, "")] %}
@@ -57,72 +77,10 @@
     </div>
   </div>
 
-
-  <div class="mb-3">
-    <div id="searchSelectWrapper">
-        <label for="queryInput" class="form-label">Search CKN</label>
-        <div id="myModal">
-            <select id="queryInput" class="select_items"></select>
-        </div>
-    </div>
-
-    <div class="row">
-      <div class="col-md-8 offset-md-4 me-0">
-        <button type="button" class="btn btn-outline-primary float-end" id="add2selected">add to query</button>
-      </div>
-    </div>
+  <div class="row px-3">
+    <button type="button" class="btn btn-primary p-1 " id="searchButton">Search!</button>
   </div>
-
-  <label for="queryList" class="form-label">Your query</label>
-  <div id="queryList_contaner">
-    <div class="list-group" id="queryList"></div>
-  </div>
-
-  <div class="container mb-3 me-0 pe-0 ps-0">
-    <div class="row me-0 justify-content-between">
-
-      <div class="col-6">
-        <div class="dropdown float-start ps-0">
-          <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="saveAsButton" data-bs-toggle="dropdown" aria-expanded="false">export</button>
-          <ul class="dropdown-menu" id="saveAsDropdown" aria-labelledby="saveAsButton">
-             <a class="dropdown-item" href="#nodes">nodes (.csv format)</a>
-             <a class="dropdown-item" href="#edges">edges (.csv format)</a>
-             <a class="dropdown-item" href="#png">image (.png format)</a>
-          </ul>
-        </div>
-      </div>
-
-      <div class="col-6">
-        <div class="pe-0">
-          <button type="button" class="btn btn-primary float-end" id="searchButton">search</button>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-
-<div id="spinner" class="card-body text-center">
-  <span class="spinner-border spinner-border-md" role="status" aria-hidden="true"></span>
-  <span> Searching... </span>
 </div>
-
-<!-- https://getbootstrap.com/docs/4.0/components/popovers/#dismiss-on-next-click -->
-    <a id="tip_popover"
-       style="top:45px; right:40px; position: absolute; z-index: 99;"
-       class="py-0  btn btn-outline-danger btn-xs inline"
-       tabindex="0"
-       role="button"
-       data-trigger="focus"
-       data-toggle="popover"
-       data-bs-content='
-   <div style="width:100%;">
-            <p>Right click on an edge or node to access its context menu.</p>
-            <p>Double click on a node to expand its neighbours.
-  </div>' data-bs-html="true" title="Network tips">
-      Tip!
-    </a>
-
 
 {% endblock %}
 

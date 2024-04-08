@@ -762,18 +762,17 @@ function format_cell(s){
     return s;
 }
 
-
 function export_nodes() {
     if(netviz.nodes==undefined) {
         vex.dialog.alert('No nodes to export! You need to do a search first.');
         return;
     }
 
-    var data = [['id', 'type', 'short name', 'description', 'synonyms', 'GMM', 'note']];
+    var data = [['id', 'TAIR', 'type', 'short name', 'description', 'synonyms', 'GMM', 'note', 'Tissue (PO)']];
     netviz.nodes.forEach(function(node, id){
         var line = new Array;
 
-        ['id', 'node_type', 'short_name', 'full_name', 'synonyms', 'GMM', 'note'].forEach(function(aname){
+        ['id','TAIR', 'node_type', 'short_name', 'full_name', 'synonyms', 'GMM', 'note', 'tissue'].forEach(function(aname){
             let atr = node[aname];
             if (atr != undefined)
                 line.push(format_cell(atr));

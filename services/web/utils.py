@@ -64,7 +64,6 @@ class CKN(object):
     def __init__(self,  edge_path, node_path, force=False, headers={}):
 
         self.graph = self.load_CKN(edge_path, node_path)
-        self.filter(limit_tissues=['root'])
         self.node_search_data = self.get_autocomplete_node_data()
 
     def load_CKN(self,  edge_path, node_path):
@@ -261,7 +260,7 @@ EDGE_EFFECT_STYLE = {
         'arrows': {'to': {'enabled': True, 'type': 'circle', 'scaleFactor':0.8}}
     },
     'act/inh': {
-        'arrows': {'to': {'enabled': True, 'type': 'arrow', 'scaleFactor':0.8}}
+        'arrows': {'to': {'enabled': True, 'type': 'circle', 'scaleFactor':0.8}}
     }
 }
 

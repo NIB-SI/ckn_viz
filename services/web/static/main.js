@@ -399,6 +399,7 @@ function postprocess_edge(item) {
                 ['Rank', item.rank],
                 ['Species', item.species],
                 ['Directed', Boolean(item.isDirected)],
+                ['Effect', item.effect],
                 ['TF regulation', Boolean(item.isTFregulation)],
                 ['Source(s)', item.hyperlink.replaceAll("|", "<br>")]];
 

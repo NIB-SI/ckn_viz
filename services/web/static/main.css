@@ -8,7 +8,7 @@ body {
 }
 
 #configColumn {
-    height: calc( 100vh - 60px );
+    height: calc( 100vh - 80px );
 
     display: flex;
     flex-direction: column;
@@ -22,9 +22,10 @@ body {
 }
 
 #networkView{
-    height: calc( 100vh - 60px);
+    position: absolute;
+    bottom:0 ;
+    padding-bottom: 20px;
 }
-
 
 .h1, h1 {
     font-size: 2rem;
@@ -140,6 +141,11 @@ body {
     max-width: 460px;
 }
 
+.popover-body {
+    overflow-y: scroll;
+    max-height: 50vh;
+}
+
 .vex-content {
     width: 550px !important;
     font-size: 1em !important;
@@ -147,6 +153,7 @@ body {
     font-family: var(--bs-font-sans-serif) !important;
 }
 
+/* nav --------------------------------- */
 .navbar{ /*navbar is same width as content */
   width: 100%;
   margin-left: auto;
@@ -156,7 +163,6 @@ body {
   border-radius: 0;
   padding: 0;
   z-index: 99;
-  height: 40px;
 }
 
 .nav-link, .nav-link:focus{
@@ -166,14 +172,26 @@ body {
 
 .nav-link:hover  {
   color: black;
-  background-color: #ddd;
+  background-color: #fff;
 }
 
-.navbar-default .nav-link  {
-  padding-top: 0em;
-  padding-bottom: 0em;
+.nav-tabs > .nav-link{
+  color: gray;
 }
 
+.dropdown:hover .dropdown-menu {
+    display: block;
+    margin-top: 0;
+ }
+
+.navbar-nav > li:not(:first-child)::after {
+    /*why is after rendered in front?*/
+    content: '';
+    border-left: 1px solid silver;
+    position: absolute;
+    top: 5px;
+    height: 40px;
+}
 
 /* page footer --------------------------------- */
 #footer {

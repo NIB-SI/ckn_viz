@@ -125,7 +125,7 @@ $( document ).ready(function() {
             //     {}\
             //     </a>'.format(nodeName, node_id);
 
-            let title = node['short_name']!= '-' ? node['short_name'] : v.truncate(node.short_name, 25);
+            let title = node['short_name']!= '-' ? node['short_name'] : v.truncate(node.node_ID, 25);
             let tair = node['TAIR'].length>0 ? '<small><strong>TAIR identifier: </strong>{}</small>'.format(node.TAIR, 25): "";
             let node_id = '<div hidden class="node_id">{}</div>'.format(node.id);
             let synonyms = node.synonyms.length>0 ? '<small><strong>Synonyms: </strong>{}</small>'.format(v.truncate(node.synonyms, maxlen)) : "";

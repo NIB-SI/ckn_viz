@@ -51,9 +51,58 @@
 
     <nav class="navbar navbar-default navbar-expand sticky-top">
       <div class="container-fluid" >
-        <ul class="nav navbar-nav">
-          <li>
-            <li> <a class="nav-link" href="/" style="margin-left: 10px;"> &larr; SKM Home</a></li>
+        <ul class="nav navbar-nav ms-4">
+          <li> <a class="nav-link" href="/"> &larr; SKM Home</a></li>
+        </ul>
+
+
+        <ul class="nav navbar-nav navbar-right me-4">
+          <li class="nav-item">
+             <a id="tip_popover"
+             class="nav-link"
+               tabindex="0"
+               role="button"
+               data-trigger="focus"
+               data-toggle="popover"
+               data-bs-content='
+           <div style="width:100%;">
+              <h5>Queries</h5>
+                <p>Find nodes in CKN using the searchbox, add them to the query, and then click "Search!" to extract the subnetwork.  </p>
+                <p>If the query contains only one node, a neighbourhood is returned. Otherwise, the undirected shortest paths between all pairs of nodes are merged and returned.</p>
+                <p>Note that the shortest path does not take into account the direction of the edges. Results are limited to show the top 25 nodes (ranked topologically by page-rank). </p>
+                <p>Use the "Filters" (bottom left) to limit  the search to nodes in tissues (by Plant Ontology terms)
+                  and ranks by reliability. </p>
+              <h5>Network tips</h5>
+                <p>Right click on an edge or node to access its context menu.</p>
+                <p>Double click on a node to expand its neighbours. </p>
+                <p>Tick "Tooltips" to enable node and edge info boxes on hover.  </p>
+              <h5>More</h5>
+                <p>See see <a href="https://skm.nib.si/documentation/ckn-explore" target="_blank">SKM Documentation &#167; CKN</a> for more details. </p>
+          </div>' data-bs-html="true" title="Usage">
+              Help!
+            </a>
+
+          </li>
+          <li class="nav-item">
+            <div class="nav-link">
+                  <input class="form-check-input" type="checkbox" id="showTooltipsCbox" value="" aria-label="...">
+                  <label class="ms-0" for="form-check-input">Tooltips</label>
+            </div>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" type="button" id="saveAsButton" data-bs-toggle="dropdown" aria-expanded="false">Export network
+              <span class="caret"></span></a>
+            <ul class="dropdown-menu" id="saveAsDropdown" aria-labelledby="saveAsButton">
+              <li>
+                <a class="dropdown-item" href="#nodes">nodes (.csv format)</a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="#edges">edges (.csv format)</a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="#png">image (.png format)</a>
+              </li>
+            </ul>
           </li>
         </ul>
       </div>
@@ -73,58 +122,15 @@
             </form>
           </div>
 
-            <div class="col-xs-6 col-sm-7 col-md-7 col-lg-8 col-xl-9 col-xxl-9 h-100" id="networkViewContainer">
-              <div id="networkView"></div>
+          <div class="col-xs-6 col-sm-7 col-md-7 col-lg-8 col-xl-9 col-xxl-9 h-100" id="networkViewContainer">
+            <div id="networkView"></div>
           </div>
         </div>
       <div id="footer" class=""></div>
     </div>
 
-  </body>
-
-
 <!-- https://getbootstrap.com/docs/4.0/components/popovers/#dismiss-on-next-click -->
-
-<div class="container">
-  <div class="row justify-content-md-center align-items-center" style="top:5px; right:15px; position: absolute; z-index: 99;">
-
-    <div class="col-auto py-0 mx-3 btn bg-white btn-outline">
-      <input class="form-check-input" type="checkbox" id="showTooltipsCbox" value="" aria-label="...">
-      <label class="ms-0" for="form-check-input">Tooltips</label>
-    </div>
-
-    <div class="col dropdown">
-    <button class="py-0 btn dropdown-toggle bg-white" type="button" id="saveAsButton" data-bs-toggle="dropdown" aria-expanded="false">Export network</button>
-    <ul class="dropdown-menu" id="saveAsDropdown" aria-labelledby="saveAsButton">
-       <a class="dropdown-item" href="#nodes">nodes (.csv format)</a>
-       <a class="dropdown-item" href="#edges">edges (.csv format)</a>
-       <a class="dropdown-item" href="#png">image (.png format)</a>
-    </ul>
-  </div>
-
-    <div class="col">
-    <a id="tip_popover"
-       class="py-0  btn btn-outline-info btn-xs inline  bg-white"
-       tabindex="0"
-       role="button"
-       data-trigger="focus"
-       data-toggle="popover"
-       data-bs-content='
-   <div style="width:100%;">
-            <p>Right click on an edge or node to access its context menu.</p>
-            <p>Double click on a node to expand its neighbours. </p>
-            <p>Tick "Tooltips" to enable node and edge info boxes on hover.  </p>
-            <p>Use the "Filters" (bottom left) to limit  the search to nodes in tissues (by Plant Ontology terms)
-              and ranks by reliability. </p>
-            <p>See see <a href="https://skm.nib.si/documentation/ckn-explore" target="_blank">SKM Documentation &#167; CKN</a> for details. </p>
-
-  </div>' data-bs-html="true" title="Network tips">
-      Tips!
-    </a>
-  </div>
-
-  </div>
-</div>
+</body>
 
 
 <div id="spinner" class="text-center">

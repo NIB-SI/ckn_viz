@@ -1,30 +1,10 @@
 {% extends 'base.html' %}
 
-
-
-
 {% block title %}CKN Explorer{% endblock %}
 
 {% block page_title %}CKN Explorer{% endblock %}
 
 {% block description %}
-  <p><small>Find nodes in CKN using the searchbox below, add them to the query, and then click "Search!" to extract the subnetwork. </small>
-    <button type="button" class="py-0  btn btn-outline-info btn-xs inline" data-toggle="popover" data-bs-content='
-   <div style="width:100%;">
-
-    <p  class="card-text">
-    If the query contains only one node a neighbourhood is returned. Otherwise, the undirected shortest paths between all pairs of nodes are merged and returned.
-    </p>
-
-   <p> Note that the shortest path does not take into account the direction of the edges. Results are limited to show the top 25 nodes (ranked topologically by page-rank). </p>
-
-    <p>For more information, see <a href="https://skm.nib.si/documentation/ckn-explore" target="_blank">SKM Documentation &#167; CKN</a>. </p>
-
-  </div>' data-bs-html="true" title="Help">
-      More
-    </button>
-  </p>
-
 {% endblock %}
 
 {% block search_interface %}
@@ -36,11 +16,6 @@
   <select id="queryInput" class="select_items form-select" placeholder="Search CKN nodes" aria-label="Search CKN nodes" aria-describedby="add2selected" ></select>
   <button class="btn btn-outline-secondary p-1" type="button" id="add2selected">Add</button>
 </div>
-
-
-
-
-
 
   <label for="queryList" class="form-label mb-0 pb-0"><h6 class="mb-0 pb-0">Query:</h4></label>
     <div id="queryList"class="list-group flex-grow-1" style="overflow-y: scroll;"></div>

@@ -174,6 +174,10 @@ $( document ).ready(function() {
         $("input:checked[type='checkbox'][id^='limit_tissues']").each(function() {
             limit_tissues.push($(this).attr('value'));
         });
+
+
+        var limit_nodes = $("#limit_nodes").val();
+
         // console.log(limit_tissues);
 
         $.ajax({
@@ -185,7 +189,8 @@ $( document ).ready(function() {
           data: JSON.stringify({
                 'nodes': $('.node_id').toArray().map(x => $(x).text()),
                 'limit_ranks':limit_ranks,
-                'limit_tissues':limit_tissues
+                'limit_tissues':limit_tissues,
+                'limit_nodes':limit_nodes
             }),
           success: function( data, textStatus, jQxhr ){
               console.log("received search result");
@@ -563,6 +568,9 @@ function expandNode(nid) {
     });
     // console.log(limit_tissues);
 
+    var limit_nodes = $("#limit_nodes").val();
+
+
     $.ajax({
       url: "/ckn/expand",
       async: false,
@@ -574,7 +582,8 @@ function expandNode(nid) {
         'nodes': [nid],
         'all_nodes': netviz.nodes.getIds(),
         'limit_ranks':limit_ranks,
-        'limit_tissues':limit_tissues
+        'limit_tissues':limit_tissues,
+        'limit_nodes':limit_nodes
       }),
       success: function( data, textStatus, jQxhr ){
           console.log("received expand result");

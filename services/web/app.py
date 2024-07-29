@@ -43,6 +43,7 @@ def search():
         query_nodes = set([int(x) for x in data.get('nodes')])
         limit_ranks = data.get('limit_ranks')
         limit_tissues = data.get('limit_tissues')
+        limit_nodes = data.get('limit_nodes')
     except Exception as e:
         return {'error': 'Invalid query data'}
 
@@ -55,8 +56,13 @@ def search():
     if subgraph.num_vertices() == 0:
         return {'error': 'No result'}
 
+    try:
+        limit_nodes =  int(limit_nodes)
+    except Exception:
+        limit_nodes = NODE_DRAW_LIMIT
+
     # print(subgraph.num_vertices(), subgraph.num_edges())
-    json_data = utils.graph2json(subgraph, query_nodes=query_nodes, node_limit=NODE_DRAW_LIMIT, edge_limit=EDGE_DRAW_LIMIT)
+    json_data = utils.graph2json(subgraph, query_nodes=query_nodes, node_limit=limit_nodes, edge_limit=EDGE_DRAW_LIMIT)
 
     return json.dumps(json_data)
 
@@ -69,6 +75,7 @@ def expand():
         all_nodes = set(data.get('all_nodes'))
         limit_ranks = data.get('limit_ranks')
         limit_tissues = data.get('limit_tissues')
+        limit_nodes = data.get('limit_nodes')
     except Exception as e:
         return {'error': 'Invalid query data'}
 
@@ -83,7 +90,12 @@ def expand():
     #     e['to'] = to
     #     elist.append(e)
 
-    json_data = utils.graph2json(subgraph, node_limit=NODE_DRAW_LIMIT, edge_limit=EDGE_DRAW_LIMIT)
+    try:
+        limit_nodes =  int(limit_nodes)
+    except Exception:
+        limit_nodes = NODE_DRAW_LIMIT
+
+    json_data = utils.graph2json(subgraph, node_limit=limit_nodes, edge_limit=EDGE_DRAW_LIMIT)
     # json_data['network']['potential_edges'] = elist
 
     # print(len(subgraph), len(potentialEdges))

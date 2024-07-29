@@ -31,6 +31,11 @@
       </h5>
       <div id="filters" class="accordion-collapse collapse" aria-labelledby="heading-filters">
         <div class="accordion-body">
+        <h5 class="mb-0 mt-2">Limit to top nodes:</h5>
+            <div class="vstack gap-3">
+              <input class="form-control" type="number" id="limit_nodes" value="25" min="0">
+            </div>
+
         <h5 class="mb-0 mt-2">Include edge ranks:</h5>
           {% for p in [(0, "checked"), (1, "checked"), (2, "checked"), (3, ""), (4, "")] %}
             <div class="vstack gap-3">

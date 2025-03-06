@@ -38,7 +38,7 @@
     <link rel="shortcut icon" href="{{ url_for('bp.static', filename='favicon.ico') }}">
     <link href="{{ url_for('bp.static', filename='main.css') }}" rel="stylesheet" />
 
-
+    <script src="{{ url_for('bp.static', filename='netviz_options.js') }}"></script>
     <script src="{{ url_for('bp.static', filename='main.js') }}"></script>
     {% block head %}{% endblock %}
 
@@ -132,12 +132,16 @@
 <!-- https://getbootstrap.com/docs/4.0/components/popovers/#dismiss-on-next-click -->
 </body>
 
-
-<div id="spinner" class="text-center">
-  <span class="spinner-border  spinner-border-sm" role="status" aria-hidden="true"></span>
-  Searching...
-</div>
-
+<!-- Modal -->
+<div class="modal fade" id="spinner" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="spinnerLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content alert alert-light">
+      <div class="modal-body d-flex align-items-center">
+        <span class="spinner-border me-4" aria-hidden="true"></span>
+        <h4 class="display m-0 p-0">Searching...</h4>
+      </div>
+    </div>
+  </div>
 
   <script type="text/javascript">
     // enable all popover in the document:

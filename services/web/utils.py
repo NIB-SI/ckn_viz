@@ -224,24 +224,24 @@ class CKN(object):
 
 EDGE_TYPE_STYLE = {
     'binding':  {
-        'color': {'color': "#57007D", 'hover': '#0000FF'},
+        'color': {'color': "#57007D", 'hover': '#57007D', 'highlight':'#57007D'},
         'label': 'binding',
         'dashes': True
     },
     'small RNA interactions': {
-        'color': {'color': "#BA3E6D", 'hover': '#0000FF'},
+        'color': {'color': "#BA3E6D", 'hover': '#BA3E6D', 'highlight':'#BA3E6D'},
         'label': 'sRNA'
     },
     'transcription factor regulation': {
-        'color': {'color': "#0E9B9B", 'hover': '#0000FF'},
+        'color': {'color': "#0E9B9B", 'hover': '#0E9B9B', 'highlight':'#0E9B9B'},
         'label': 'TF'
     },
     'post-translational modification': {
-        'color': {'color': "#AA4000", 'hover': '#0000FF'},
+        'color': {'color': "#AA4000", 'hover': '#AA4000', 'highlight':'#AA4000'},
         'label': 'PTM'
     },
     'other': {
-        'color': {'color': "#0099CC", 'hover': '#0000FF'},
+        'color': {'color': "#0099CC", 'hover': '#0099CC', 'highlight':'#0099CC'},
         'label': 'other'
     }
 }
@@ -325,11 +325,13 @@ NODE_STYLE = {
     },
     'biotic': {
         'shape': 'diamond',
-        'color': {'background': '#cd853f', 'border': '#965e27'}
+        'color': {'background': '#cd853f', 'border': '#965e27'},
+        'font': {'vadjust': -40} # label inside node
     },
     'abiotic': {
         'shape': 'diamond',
-        'color': {'background': '#cd3f40', 'border': '#a62b2c'}
+        'color': {'background': '#cd3f40', 'border': '#a62b2c'},
+        'font': {'vadjust': -40} # label inside node
     },
     # every one else,
     'metabolite': {
@@ -340,7 +342,7 @@ NODE_STYLE = {
         'shape': 'box',
         'color': {'background': '#c4bcff', 'border': '#6e5aff'}
     },
-    'default': {
+    'default': { # fallback
         'shape': 'box',
         'color': {'background': 'White', 'border': '#6c7881'}
     }

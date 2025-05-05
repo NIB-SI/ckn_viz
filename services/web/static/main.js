@@ -394,7 +394,7 @@ function postprocess_node(node) {
     ['GMM annotation', node.GMM],
     ['Tissue (TAIR Plant Ontology)', node.tissue],
     ['Note', node.note],
-    ['KnetMiner', node.TAIR.length > 0 ? '<p><a target="_blank" href="https://knetminer.com/araknet/genepage?{}">Search for {} in KnetMiner</a></p>'.format(jQuery.param({ list: node.TAIR }), node.TAIR) : '']
+    ['KnetMiner', node.TAIR.length > 0 ? '<p><a target="_blank" href="https://app.knetminer.com/plants-lite/Arabidopsis_thaliana?{}">Search for {} in KnetMiner</a></p>'.format(jQuery.param({ list: node.TAIR }), node.TAIR) : '']
   ];
 
   let table = '';
